@@ -3,7 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { BookOpen, Code2, FlaskConical, LibraryBig, Lock, LockOpen, Menu, PlayCircle, X } from 'lucide-react'
 import { useEditAuth } from '../lib/auth'
 import { Button, Input, cx } from './ui'
-import { Logo, LogoMark } from './Logo'
+import { Logo } from './Logo'
 
 export const NAV: { to: string; label: string; icon: typeof LibraryBig; end?: boolean }[] = [
   { to: '/problems', label: 'Úlohy', icon: LibraryBig },
@@ -58,12 +58,9 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { info } = useEditAuth()
   return (
     <nav aria-label="Hlavná navigácia" className="flex h-full flex-col gap-6 px-3 py-4">
-      <NavLink to="/" onClick={onNavigate} className="flex items-center gap-2.5 rounded-[var(--radius)] px-2 py-1 hover:bg-surface-2" aria-label="AlgoLab, úvodná stránka">
-        <span className="size-9 shrink-0"><LogoMark className="size-full" /></span>
-        <span className="leading-tight">
-          <span className="block text-[16px] font-semibold tracking-[-0.01em] text-[var(--logo-ink)]">AlgoLab</span>
-          <span className="block text-xs text-ink-3">Návrh a analýza algoritmov</span>
-        </span>
+      <NavLink to="/" onClick={onNavigate} className="block rounded-[var(--radius)] px-2 py-1.5 hover:bg-surface-2" aria-label="AlgoLab, úvodná stránka">
+        <Logo size={34} />
+        <span className="mt-1 block text-xs text-ink-3">Návrh a analýza algoritmov</span>
       </NavLink>
       <ul className="flex flex-col gap-0.5">
         {NAV.map(({ to, label, icon: Icon, end }) => (

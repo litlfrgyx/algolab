@@ -94,7 +94,7 @@ function TopBar() {
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-ground">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-4 px-4 sm:px-8">
-        <Link to="/" aria-label="AlgoLab, úvodná stránka"><Logo size={30} /></Link>
+        <Link to="/" aria-label="AlgoLab, úvodná stránka"><Logo size={36} /></Link>
         <nav aria-label="Hlavná navigácia" className="hidden items-center gap-1 md:flex">
           {NAV.map((n) => (
             <Link key={n.to} to={n.to} className="rounded-[var(--radius)] px-3 py-2 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink">{n.label}</Link>
@@ -263,7 +263,7 @@ export default function Landing() {
         <section className="bg-accent-soft">
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-6 px-4 py-14 sm:px-8">
             <div className="flex items-center gap-4">
-              <span className="size-14 shrink-0" style={{ ['--logo-bg' as string]: 'var(--accent-soft)' }}><LogoMark detailed className="size-full" /></span>
+              <LogoMark size={60} className="shrink-0" />
               <h2 className="text-[26px] font-semibold leading-tight tracking-[-0.02em]">Začni jednou úlohou a jedným algoritmom</h2>
             </div>
             <Link to="/problems">
