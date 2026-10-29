@@ -1,0 +1,15 @@
+# Spustenie: docker compose up --build
+# Linux kontajner zaisťuje reálnu izoláciu sandboxu (FS/sieť) + resource limity.
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////data/algoanalyzer.db
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:5180
+    volumes:
+      - ./data:/data
+    # Tvrdý strop pamäte na úrovni kontajnera (doplnok k setrlimit).
+    mem_limit: 1g
+    pids_limit: 256
