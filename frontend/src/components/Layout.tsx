@@ -96,7 +96,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
 export function SiteFooter({ year = 2026, className }: { year?: number; className?: string }) {
   return (
-    <footer className={cx('mt-16 border-t border-line pt-5 pb-2 text-[13px] text-ink-3', className)}>
+    <footer className={cx('mt-16 border-t border-line pt-5 pb-2 text-center text-[13px] text-ink-3', className)}>
       ©{year}{' '}
       <a href="https://kpi.fei.tuke.sk" target="_blank" rel="noopener noreferrer" className="text-ink-2 underline decoration-line-strong hover:text-accent hover:decoration-accent">
         KPI FEI TUKE
@@ -108,7 +108,7 @@ export function SiteFooter({ year = 2026, className }: { year?: number; classNam
 export default function Layout() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
-  const wide = location.pathname.startsWith('/visualizer') || location.pathname === '/algorithms'
+  const wide = location.pathname.startsWith('/visualizer') || ['/algorithms', '/problems', '/experiments'].includes(location.pathname)
   const year = 2026
   return (
     <div className="min-h-dvh bg-ground">

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Menu, X } from 'lucide-react'
+import { ArrowRight, Menu, Pause, Play, X } from 'lucide-react'
 import { api } from '../api'
 import { useAsync } from '../lib/hooks'
 import { TOPICS, TOPIC_ORDER, formatNumber, prettyO, topicOf } from '../lib/labels'
@@ -9,10 +9,9 @@ import { NAV, SiteFooter } from '../components/Layout'
 import { ComplexityLadder } from '../components/ComplexityLadder'
 import { CodeView } from '../components/CodeView'
 import { ResultsChart, SeriesLegend } from '../components/ResultsChart'
-import { ArrayView } from '../components/viz/ArrayView'
-import { RoleLegend } from '../components/viz/StepView'
-import { Button, Tag } from '../components/ui'
-import type { AlgorithmResultSeries, ArrayStep } from '../types'
+import { RoleLegend, StepView } from '../components/viz/StepView'
+import { Button, Segmented, Tag } from '../components/ui'
+import type { AlgorithmResultSeries, VisualizationTrace } from '../types'
 
 // Skutočné namerané priemery z pripraveného experimentu „Jednoduché triedenia oproti merge sortu“
 // (náhodné pole, 3 opakovania), pozri docs/OVERENIE-zlozitosti.md.
@@ -52,39 +51,78 @@ const SNIPPET = `def solve(data, tracker):
             j -= 1
     return a`
 
-const DEMO_INPUT = [38, 12, 71, 25, 90, 7, 54, 33, 66, 19, 82, 45]
+interface Demo {
+  kind: 'array' | 'grid' | 'graph' | 'tree' | 'string'
+  tab: string
+  algorithm: string
+  title: string
+  input: unknown
+}
 
-/** Živá ukážka: skutočná stopa insertion sortu z API, prehráva sa dookola. */
+const DEMOS: Demo[] = [
+  { kind: 'array', tab: 'Pole', algorithm: 'alg_insertion', title: 'Insertion sort',
+    input: [38, 12, 71, 25, 90, 7, 54, 33, 66, 19, 82, 45] },
+  { kind: 'grid', tab: 'Tabuľka', algorithm: 'alg_lcs_dp', title: 'Najdlhšia spoločná podpostupnosť, dynamic programming',
+    input: { a: 'ACGTAC', b: 'GTACAG' } },
+  { kind: 'graph', tab: 'Graf', algorithm: 'alg_bfs', title: 'BFS (adjacency list)',
+    input: { n: 9, edges: [[0, 1], [0, 2], [1, 3], [1, 4], [2, 4], [2, 5], [3, 6], [4, 6], [5, 7], [6, 8], [7, 8]], start: 0 } },
+  { kind: 'tree', tab: 'Strom', algorithm: 'alg_set_avl', title: 'AVL tree, vkladanie s rotáciami',
+    input: [10, 20, 30, 40, 50, 25, 35, 45, 5].map((x) => ['insert', x]).concat([['find', 35]]) },
+  { kind: 'string', tab: 'Text', algorithm: 'alg_kmp', title: 'Knuth-Morris-Pratt',
+    input: { text: 'ABABDABACDABABCABAB', pattern: 'ABABCABAB' } },
+]
+
+/** Živá ukážka všetkých piatich zobrazení. Stopy sú skutočné, prehrávajú sa dookola. */
 function LiveDemo() {
-  const [steps, setSteps] = useState<ArrayStep[] | null>(null)
+  const [kind, setKind] = useState<Demo['kind']>('array')
+  const [traces, setTraces] = useState<Partial<Record<Demo['kind'], VisualizationTrace | null>>>({})
   const [i, setI] = useState(0)
-  useEffect(() => {
-    let alive = true
-    api.visualize({ algorithm_id: 'alg_insertion', input: DEMO_INPUT, max_steps: 400 })
-      .then((t) => alive && setSteps(t.steps.filter((s): s is ArrayStep => s.kind === 'array')))
-      .catch(() => alive && setSteps([]))
-    return () => { alive = false }
-  }, [])
-  useEffect(() => {
-    if (!steps?.length) return
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    if (reduce) return
-    const t = window.setInterval(() => setI((x) => (x + 1) % (steps.length + 6)), 650)
-    return () => window.clearInterval(t)
-  }, [steps])
+  const [playing, setPlaying] = useState(true)
+  const demo = DEMOS.find((d) => d.kind === kind)!
+  const trace = traces[kind]
 
-  const fallback: ArrayStep = { kind: 'array', index: 0, type: 'snapshot', label: 'vstup', array: DEMO_INPUT, highlights: [] }
-  const step = steps?.length ? steps[Math.min(i, steps.length - 1)] : fallback
-  const total = steps?.length ?? 0
+  useEffect(() => {
+    if (traces[kind] !== undefined) return
+    let alive = true
+    api.visualize({ algorithm_id: demo.algorithm, input: demo.input, max_steps: 600 })
+      .then((t) => alive && setTraces((m) => ({ ...m, [kind]: t })))
+      .catch(() => alive && setTraces((m) => ({ ...m, [kind]: null })))
+    return () => { alive = false }
+  }, [kind, demo, traces])
+
+  useEffect(() => setI(0), [kind])
+
+  const total = trace?.steps.length ?? 0
+  useEffect(() => {
+    if (!total || !playing) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const t = window.setInterval(() => setI((x) => (x + 1) % (total + 5)), kind === 'string' ? 450 : 600)
+    return () => window.clearInterval(t)
+  }, [total, playing, kind])
+
+  const step = trace ? trace.steps[Math.min(i, total - 1)] : undefined
   return (
     <div data-ui className="rounded-[var(--radius-lg)] border border-line bg-surface">
-      <div className="flex items-baseline justify-between gap-3 px-4 pt-3.5">
-        <p className="text-[15px] font-semibold">Insertion sort</p>
-        <p className="text-[13px] text-ink-3 num">{total ? `krok ${Math.min(i, total - 1) + 1} z ${total}` : 'pripravujem'}</p>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+        <Segmented label="Druh zobrazenia" value={kind} onChange={(k) => { setKind(k); setPlaying(true) }}
+          options={DEMOS.map((d) => ({ value: d.kind, label: d.tab }))} />
+        <button
+          onClick={() => setPlaying(!playing)}
+          aria-label={playing ? 'Zastaviť ukážku' : 'Prehrať ukážku'}
+          className="grid size-8 place-items-center rounded-[var(--radius)] text-ink-2 hover:bg-surface-2 hover:text-ink cursor-pointer"
+        >
+          {playing ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}
+        </button>
       </div>
-      <p className="min-h-[1.5rem] px-4 pt-1 text-[15px]" aria-live="off">{step.label}</p>
-      <div className="px-4 py-3"><ArrayView step={step} /></div>
-      <div className="border-t border-line px-4 py-3"><RoleLegend kind="array" /></div>
+      <div className="flex items-baseline justify-between gap-3 px-4 pt-3">
+        <p className="text-[15px] font-semibold">{demo.title}</p>
+        <p className="shrink-0 text-[13px] text-ink-3 num">{total ? `krok ${Math.min(i, total - 1) + 1} z ${total}` : ''}</p>
+      </div>
+      <p className="min-h-[1.5rem] px-4 pt-1 text-[15px]">{step?.label ?? (trace === null ? 'Ukážku sa nepodarilo načítať.' : 'Pripravujem ukážku…')}</p>
+      <div className="flex h-[360px] items-center overflow-hidden px-4 py-3 [&_svg]:max-h-[300px]">
+        <div className="w-full">{trace && step && <StepView step={step} trace={trace} />}</div>
+      </div>
+      <div className="border-t border-line px-4 py-3"><RoleLegend kind={kind} /></div>
     </div>
   )
 }
@@ -139,7 +177,7 @@ export default function Landing() {
   const stats = [
     { value: info.data?.problems ?? 27, label: 'úloh' },
     { value: info.data?.algorithms ?? 85, label: 'algoritmov' },
-    { value: 5, label: 'druhov zobrazenia: pole, tabuľka, graf, strom, text' },
+    { value: 5, label: 'druhov zobrazenia, vyskúšaj ich v ukážke hore' },
   ]
 
   return (
