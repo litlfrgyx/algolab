@@ -59,3 +59,15 @@ npm run lint
    - `RUNNER_TOKEN` rovnaký ako v runneri
    - `EDIT_PASSWORD` heslo na vlastný kód, prázdne znamená bez ochrany
 4. Po nasadení over `/api/info` a spusti jeden experiment.
+
+## Aktuálne nasadenie
+
+| Časť | Adresa |
+|---|---|
+| Aplikácia | https://algolab-kpi.vercel.app |
+| Runner (sandbox) | https://algolab-runner.vercel.app, prijíma len požiadavky s `RUNNER_TOKEN` |
+| Vercel tím | `algolab`, projekty `algolab` a `algolab-runner`, región funkcií `dub1` |
+| Databáza | Supabase projekt v `eu-west-1`, schéma `algolab`, rola `algolab_app`, pooler `aws-0-eu-west-1.pooler.supabase.com:6543` |
+
+Každý push do vetvy `main` nasadí oba projekty znova. Heslá sú len v premenných prostredia
+na Verceli, nie v repozitári.
