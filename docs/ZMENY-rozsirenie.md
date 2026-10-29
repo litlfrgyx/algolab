@@ -148,8 +148,8 @@ rámec.
 
 Overenie katalógu: `backend/catalog_test.py` spustí každý algoritmus na každom druhu
 vstupu s tromi seedmi, skontroluje správnosť (zámerne nesprávne algoritmy musia aspoň raz
-zlyhať), nenulový počet operácií a druh krokov vizualizácie. Výsledok: 3 517 kontrol,
-0 zlyhaní.
+zlyhať), nenulový počet operácií a druh krokov vizualizácie. Výsledok: všetky kontroly prešli,
+
 
 ## 8. Rozhranie (kapitola 3.6)
 

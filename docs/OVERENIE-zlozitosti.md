@@ -111,3 +111,64 @@
 | Rekurzia oproti vlastnému zásobníku | zdegenerovaný strom | Preorder so zásobníkom | O(n) (avg) | O(n) | high | 1.0 | match | áno |
 | Inorder rekurzívne a so zásobníkom | predvolený vstup | Inorder rekurzívne | O(n) (avg) | O(n) | high | 1.0 | match | áno |
 | Inorder rekurzívne a so zásobníkom | predvolený vstup | Inorder so zásobníkom | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Tri implementácie frontu | predvolený vstup | Pole s posúvaním prvkov | O(n^2) (avg) | O(n^2) | high | 1.99 | match | áno |
+| Tri implementácie frontu | predvolený vstup | Kruhové pole | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Tri implementácie frontu | predvolený vstup | Spájaný zoznam | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Vkladanie oproti BuildHeap | náhodné pole | Postupné vkladanie | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Vkladanie oproti BuildHeap | náhodné pole | BuildHeap zdola | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Vkladanie oproti BuildHeap | zoradené pole | Postupné vkladanie | O(n log n) (worst) | O(n log n) | high | 1.13 | match | áno |
+| Vkladanie oproti BuildHeap | zoradené pole | BuildHeap zdola | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Pole oproti spájanému zoznamu | veľa spájaní | Zoznam v poli | O(n^2) (avg) | O(n^2) | high | 2.04 | match | áno |
+| Pole oproti spájanému zoznamu | veľa spájaní | Spájaný zoznam s ukazovateľom na koniec | O(n^2) (avg) | O(n^2) | high | 2.09 | match | áno |
+| Pole oproti spájanému zoznamu | Cut zo začiatku | Zoznam v poli | O(n^2) (avg) | O(n^2) | high | 1.98 | match | áno |
+| Pole oproti spájanému zoznamu | Cut zo začiatku | Spájaný zoznam s ukazovateľom na koniec | O(n) (best) | O(n) | high | 1.0 | match | áno |
+| Pole oproti spájanému zoznamu | Cut z konca | Zoznam v poli | O(n) (best) | O(n) | high | 1.0 | match | áno |
+| Pole oproti spájanému zoznamu | Cut z konca | Spájaný zoznam s ukazovateľom na koniec | O(n^2) (avg) | O(n^2) | high | 1.98 | match | áno |
+| Zásobník v poli a v zozname | predvolený vstup | Zásobník v poli | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Zásobník v poli a v zozname | predvolený vstup | Zásobník v spájanom zozname | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Memoizácia oproti tabuľke | predvolený vstup | Rekurzia s memoizáciou | O(n^3) (avg) | O(n^3) | high | 2.96 | match | áno |
+| Memoizácia oproti tabuľke | predvolený vstup | Tabuľka podľa dĺžky úseku | O(n^3) (avg) | O(n^3) | high | 2.93 | match | áno |
+| Pažravý algoritmus oproti dynamickému programovaniu | sada z cvičenia | Pažravý algoritmus | O(n) (avg) | O(n) | high | 0.9 | match | nie |
+| Pažravý algoritmus oproti dynamickému programovaniu | sada z cvičenia | Dynamické programovanie | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Pažravý algoritmus oproti dynamickému programovaniu | eurové mince | Pažravý algoritmus | O(n) (avg) | O(n) | high | 0.97 | match | áno |
+| Pažravý algoritmus oproti dynamickému programovaniu | eurové mince | Dynamické programovanie | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Tabuľka oproti vzorcu pre veľké n | predvolený vstup | Pascalov trojuholník v tabuľke | O(n^2) (avg) | O(n^2) | high | 1.99 | match | áno |
+| Tabuľka oproti vzorcu pre veľké n | predvolený vstup | Multiplikatívny vzorec | O(n) (avg) | O(n) | high | 0.99 | match | áno |
+| Exponenciálna rekurzia oproti tabuľke | predvolený vstup | Rekurzia cez všetky delenia | O(3^n) (avg) | O(3^n) | high | 7.91 | match | áno |
+| Exponenciálna rekurzia oproti tabuľke | predvolený vstup | Rekurzia s memoizáciou | O(n^3) (avg) | O(n^3) | high | 2.77 | match | áno |
+| Exponenciálna rekurzia oproti tabuľke | predvolený vstup | Tabuľka podľa dĺžky úseku | O(n^3) (avg) | O(n^3) | high | 2.64 | match | áno |
+| Rekurzia oproti tabuľke | predvolený vstup | Rekurzia podľa Pascalovho vzťahu | O(2^n) (avg) | O(2^n) | high | 7.55 | match | áno |
+| Rekurzia oproti tabuľke | predvolený vstup | Rekurzia s memoizáciou | O(n^2) (avg) | O(n^2) | high | 1.87 | match | áno |
+| Rekurzia oproti tabuľke | predvolený vstup | Pascalov trojuholník v tabuľke | O(n^2) (avg) | O(n^2) | high | 1.73 | match | áno |
+| Rekurzia oproti tabuľke | predvolený vstup | Multiplikatívny vzorec | O(n) (avg) | O(n) | high | 0.84 | match | áno |
+| Exponenciálna rekurzia oproti lineárnym riešeniam | predvolený vstup | Rekurzia podľa definície | O(phi^n) (avg) | O(phi^n) | high | 5.87 | match | áno |
+| Exponenciálna rekurzia oproti lineárnym riešeniam | predvolený vstup | Rekurzia s memoizáciou | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Exponenciálna rekurzia oproti lineárnym riešeniam | predvolený vstup | Tabuľka zdola nahor | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Exponenciálna rekurzia oproti lineárnym riešeniam | predvolený vstup | Dve premenné | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Exponenciálna rekurzia oproti lineárnym riešeniam | predvolený vstup | Rýchle zdvojovanie | O(log n) (avg) | O(log n) | low | 0.3 | match | áno |
+| Lineárne riešenia a rýchle zdvojovanie pre veľké n | predvolený vstup | Rekurzia s memoizáciou | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Lineárne riešenia a rýchle zdvojovanie pre veľké n | predvolený vstup | Tabuľka zdola nahor | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Lineárne riešenia a rýchle zdvojovanie pre veľké n | predvolený vstup | Dve premenné | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Lineárne riešenia a rýchle zdvojovanie pre veľké n | predvolený vstup | Rýchle zdvojovanie | O(log n) (avg) | O(log n) | high | 0.13 | match | áno |
+| Faktoriál cyklom a rekurziou | predvolený vstup | Cyklus | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Faktoriál cyklom a rekurziou | predvolený vstup | Rekurzia | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Tri spôsoby výpočtu 2^n | predvolený vstup | Opakované násobenie | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Tri spôsoby výpočtu 2^n | predvolený vstup | Rýchle umocňovanie | O(log n) (avg) | O(log n) | high | 0.08 | match | áno |
+| Tri spôsoby výpočtu 2^n | predvolený vstup | Bitový posun | O(1) (avg) | O(1) | low | 0.0 | match | áno |
+| Cyklus oproti vzorcu | predvolený vstup | Cyklus | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Cyklus oproti vzorcu | predvolený vstup | Gaussov vzorec | O(1) (avg) | O(1) | low | 0.0 | match | áno |
+| Počet porovnaní pri hľadaní minima a maxima | náhodné pole | Naivný prechod | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Počet porovnaní pri hľadaní minima a maxima | náhodné pole | MAXMIN (rozdeľuj a panuj) | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+| Počet porovnaní pri hľadaní minima a maxima | náhodné pole | Prechod po dvojiciach | O(n) (avg) | O(n) | high | 1.0 | match | áno |
+
+Spolu 158 sérií: zhoda 145, nezhoda 5, neurčené 8.
+
+## Vysvetlenie nezhôd
+
+- Kruskal, Prim s haldou, Dijkstra s haldou: operácia s haldou a zabudované zoradenie hrán sa
+  počítajú ako jedna operácia, preto počet operácií rastie ako n + m a odhad ukáže O(n),
+  v hustom grafe O(n²). Logaritmický faktor meranie operácií nevidí.
+- MSD radix sort pri pevnej dĺžke slov: na rozlíšenie n slov treba asi log n znakov,
+  meranie ukáže n log n. Deklarované O(n) platí pre ohraničenú dĺžku porovnávanej časti.
+
+Tabuľku vytvára `backend/experiments_report.py` nad dočasnou databázou.
