@@ -1,0 +1,1 @@
+"""Analýza nameraných výsledkov."""

@@ -1,226 +1,153 @@
-# Kontrakt systému — jediný zdroj pravdy
+# Kontrakt systému AlgoLab
 
-Tento dokument definuje rozhranie medzi **frontendom** (React/TS) a **backendom**
-(FastAPI/Python). Je to prvý a najdôležitejší artefakt: pokiaľ platí, môžu obe
-strany napredovať paralelne (frontend cez mock implementáciu `ApiClient`).
+Rozhranie medzi kódom používateľa, sandboxom, API a frontendom. Implementácia:
 
-Implementačné zrkadlá:
-
-- TypeScript typy: [`frontend/src/types/`](frontend/src/types/) — `domain.ts`, `steps.ts`, `api.ts`
 - Pydantic schémy: [`backend/app/schemas.py`](backend/app/schemas.py)
-- Kontrakt trackera (producent krokov): [`backend/app/tracker.py`](backend/app/tracker.py)
-
----
+- TypeScript typy: [`frontend/src/types.ts`](frontend/src/types.ts)
+- Tracker (zaznamenáva kroky): [`runner/algolab_sandbox/tracker.py`](runner/algolab_sandbox/tracker.py)
+- Vstavaný katalóg: [`backend/app/catalog/`](backend/app/catalog/)
 
 ## 1. Návrhové rozhodnutia
 
-| # | Rozhodnutie | Zdôvodnenie |
-|---|-------------|-------------|
-| D1 | **Drôtový formát je snake_case** na oboch stranách | Žiadna transformačná vrstva medzi Pydantic a TS → menej chýb |
-| D2 | **Každý krok nesie plný snímok stavu** (nie delta) | Vizualizácia beží len pre malé `n` (~≤ 50); prehrávanie vpred/vzad je triviálne |
-| D3 | **`operation_counts` je odvodené z počtu eventov trackera** | Jeden zdroj dát pre vizualizér aj meranie; hardvérovo nezávislá metrika (kap. 2.1.4) |
-| D4 | **Renderer sa určuje raz na stope**, krok má diskriminant `kind` | Bezpečné zúženie typov v TS, jednoduchý `switch` na frontende |
-| D5 | **`solve(data, tracker)` aj `solve(data)` sú platné** | Bez trackera funguje benchmark; tracker je voliteľný pre vizualizáciu |
-| D6 | **Seed v generátore aj experimente** | Reprodukovateľnosť experimentov (opakovaná téma práce) |
-| D7 | **Čas = ISO 8601 reťazec, ID = string** | Stabilné naprieč JSON; ID nezávisí od DB (UUID/slug) |
+| # | Rozhodnutie | Dôvod |
+|---|---|---|
+| D1 | Formát JSON je snake_case na oboch stranách | Medzi Pydantic a TypeScriptom netreba prevod |
+| D2 | Každý krok nesie úplný snímok stavu | Vizualizácia beží na malom vstupe, krokovanie vpred aj vzad je jednoduché |
+| D3 | Počet operácií počíta tracker | Meranie nezávisí od hardvéru a rovnaký kód slúži na meranie aj vizualizáciu |
+| D4 | Druh zobrazenia určuje pole `kind` v každom kroku | Frontend vyberie renderer jedným `switch` |
+| D5 | Platí `solve(data)` aj `solve(data, tracker)` | Bez trackera sa algoritmus dá merať, s ním aj vizualizovať |
+| D6 | Generátor aj experiment majú seed | Experiment sa dá zopakovať s rovnakými vstupmi |
+| D7 | Kód používateľa beží v samostatnom procese a pri nasadení na samostatnom serveri bez hesiel | Chyba v sandboxe neodhalí databázu |
+| D8 | Experiment beží po dávkach (`start` a opakované `step`) | Funguje rovnako lokálne aj v serverless prostredí bez dlhých spojení |
 
----
-
-## 2. Dátový model (entity)
-
-Podrobné polia: `domain.ts` / `schemas.py`. Prehľad vzťahov:
+## 2. Dátový model
 
 ```
-Problem 1───* Algorithm        (jeden z nich môže byť reference_algorithm)
+Problem 1───* Algorithm          (jeden môže byť referenčný)
    │     1───* InputGenerator
    │
-   *
-Experiment  (problem_id, algorithm_ids[], generator_id, sizes[], repeats, timeout_ms, seed)
-   │
-   1───* ExperimentRun  (algorithm_id × input_size × repeat_index → čas, pamäť, operation_counts, is_correct, status)
+   └──* Experiment  (algorithm_ids[], generator_id, sizes[], repeats, seed, generator_params, variants[])
+            │
+            └──* ExperimentRun  (algoritmus × variant × veľkosť × opakovanie: čas, pamäť, operácie, správnosť)
+Meta  (schema_version, catalog_version)
 ```
 
-Kľúčové polia oproti pôvodnému návrhu (pridané):
+Polia pridané pri rozšírení (podrobne v `docs/ZMENY-rozsirenie.md`):
 
-- `Problem.category` + `Problem.reference_algorithm_id`
-- `Algorithm.supports_visualization` (odvodené: volá kód `tracker`?)
-- `InputGenerator.param_spec` (deklarácia parametrov pre formulár) + `default_sizes`
-- `Experiment.seed`, `Experiment.generator_params`
-- `ExperimentRun.operation_counts` (porovnania/výmeny…), `repeat_index`, `status` (ok/error/timeout)
+- `Problem`: `summary`, `input_type`, `renderer`, `checker_code`, `tags`, `is_builtin`, `sort_order`
+- `Algorithm`: `description`, `paradigm`, `complexity_time_best/avg/worst`, `complexity_space`,
+  `complexity_note`, `complexity_param`, `properties`, `is_builtin`, `sort_order`
+- `InputGenerator`: `description`, `viz_size`, `is_builtin`
+- `Experiment`: `variants`, `total_cases`, `done_cases`, `is_builtin`
+- `ExperimentRun`: `variant_index`, `variant_label`, `check_message`
 
----
+Vstavané záznamy (`is_builtin = true`) sa nedajú meniť ani mazať. Tlačidlo Duplikovať vytvorí
+upraviteľnú kópiu.
 
-## 3. REST endpointy
+## 3. Kód používateľa
 
-Base URL: `/api` · WebSocket: `/ws` · chyby: `{ "detail": "...", "code"?: "..." }`
+### Algoritmus
 
-### Problems
-| Metóda | Cesta | Telo → Odpoveď |
-|--------|-------|----------------|
-| GET | `/api/problems` | → `Problem[]` |
-| POST | `/api/problems` | `CreateProblemRequest` → `Problem` |
-| GET | `/api/problems/{id}` | → `Problem` |
-| PUT | `/api/problems/{id}` | `UpdateProblemRequest` → `Problem` |
-| DELETE | `/api/problems/{id}` | → `204` |
-
-### Algorithms
-| Metóda | Cesta | Telo → Odpoveď |
-|--------|-------|----------------|
-| GET | `/api/problems/{problem_id}/algorithms` | → `Algorithm[]` |
-| POST | `/api/problems/{problem_id}/algorithms` | `CreateAlgorithmRequest` → `Algorithm` |
-| GET | `/api/algorithms/{id}` | → `Algorithm` |
-| PUT | `/api/algorithms/{id}` | `UpdateAlgorithmRequest` → `Algorithm` |
-| DELETE | `/api/algorithms/{id}` | → `204` |
-
-### Generators
-| Metóda | Cesta | Telo → Odpoveď |
-|--------|-------|----------------|
-| GET | `/api/problems/{problem_id}/generators` | → `InputGenerator[]` |
-| POST | `/api/problems/{problem_id}/generators` | `CreateGeneratorRequest` → `InputGenerator` |
-| GET | `/api/generators/{id}` | → `InputGenerator` |
-| PUT | `/api/generators/{id}` | `UpdateGeneratorRequest` → `InputGenerator` |
-| DELETE | `/api/generators/{id}` | → `204` |
-| POST | `/api/generators/{id}/preview` | `GeneratorPreviewRequest` → `GeneratorPreviewResponse` |
-
-### Experiments
-| Metóda | Cesta | Telo → Odpoveď |
-|--------|-------|----------------|
-| GET | `/api/experiments` | → `Experiment[]` |
-| POST | `/api/experiments` | `CreateExperimentRequest` → `Experiment` |
-| GET | `/api/experiments/{id}` | → `Experiment` |
-| DELETE | `/api/experiments/{id}` | → `204` |
-| POST | `/api/experiments/{id}/run` | → `202` (priebeh cez WS) |
-| POST | `/api/experiments/{id}/cancel` | → `202` |
-| GET | `/api/experiments/{id}/runs` | → `ExperimentRun[]` |
-| GET | `/api/experiments/{id}/results` | → `ExperimentResults` (agregované min/avg/max) |
-| GET | `/api/experiments/{id}/export?format=csv\|json` | → súbor (CSV/JSON) |
-| WS | `/ws/experiments/{id}` | server → klient: `ProgressMessage` |
-
-> PNG export grafov je čisto klientský (`canvas.toBlob`), nepotrebuje endpoint.
-
-### Vizualizácia + validácia
-| Metóda | Cesta | Telo → Odpoveď |
-|--------|-------|----------------|
-| POST | `/api/visualize` | `VisualizeRequest` → `VisualizationTrace` |
-| POST | `/api/code/validate` | `ValidateCodeRequest` → `ValidateCodeResponse` |
-
-Split-screen porovnanie (dva algoritmy) = frontend zavolá `/api/visualize` dvakrát
-na rovnakom vstupe (raz pre každý `algorithm_id`).
-
----
-
-## 4. Schéma `Step` — jadro vizualizéra
-
-Stopu (`VisualizationTrace`) produkuje `tracker`, konzumuje ju renderer na
-frontende. `renderer` je na úrovni stopy; každý krok má `kind` pre zúženie typu.
-
-Spoločné polia každého kroku: `index`, `type`, `label`, voliteľne `code_line`
-(1-based riadok kódu na zvýraznenie). Roly zvýraznenia (`HighlightRole`):
-`compare · swap · pivot · active · match · sorted · range · visited`.
-
-### 4.1 Renderer `array` (sorting, vyhľadávanie, divide & conquer)
-
-```json
-{
-  "kind": "array",
-  "index": 12,
-  "type": "swap",
-  "label": "swap [2] ↔ [3]",
-  "code_line": 6,
-  "array": [3, 1, 4, 5, 2],
-  "highlights": [
-    { "index": 2, "role": "swap" },
-    { "index": 3, "role": "swap" }
-  ],
-  "pointers": { "i": 2, "j": 3 }
-}
+```python
+def solve(data, tracker):
+    ...
+    return vysledok
 ```
 
-### 4.2 Renderer `grid` (dynamické programovanie, matice, backtracking)
+### Generátor vstupov
 
-```json
-{
-  "kind": "grid",
-  "index": 7,
-  "type": "set",
-  "label": "dp[1][2] = 1 (zhoda A==A)",
-  "code_line": 9,
-  "grid": [[0, 0, 0], [0, 1, null]],
-  "highlights": [{ "row": 1, "col": 1, "role": "match" }],
-  "row_labels": ["", "A"],
-  "col_labels": ["", "A", "B"]
-}
+```python
+def generate(n, **params):     # params obsahuje aj seed
+    ...
+    return vstup
 ```
 
-### 4.3 Renderer `string` (algoritmy na reťazcoch, vyhľadávanie vzoru)
+Parametre generátora popisuje `param_spec` (typ `enum`, `number` alebo `boolean`, popisy
+hodnôt v `option_labels`). Neznáme parametre sa funkcii neodovzdajú.
 
-```json
-{
-  "kind": "string",
-  "index": 3,
-  "type": "compare",
-  "label": "text[3] vs pattern[1]",
-  "value": "ABABCAB",
-  "highlights": [{ "index": 3, "role": "compare" }],
-  "pattern": "ABC",
-  "pattern_highlights": [{ "index": 1, "role": "compare" }],
-  "pointers": { "i": 3, "j": 1 }
-}
+### Kontrola správnosti
+
+```python
+def check(input, output, expected=None):
+    return True                      # alebo (False, "správa pre študenta")
 ```
 
-Stopa potom vyzerá takto (skrátené):
+`expected` je výsledok referenčného algoritmu na tom istom vstupe. Ak úloha nemá `check`,
+výstup sa porovná s `expected`. Algoritmus s vlastnosťou `intentionally_incorrect` slúži
+na ukážku, že kontrola chybu odhalí.
 
-```json
-{
-  "renderer": "array",
-  "algorithm_id": "alg_bubble",
-  "algorithm_name": "Bubble Sort",
-  "input": [5, 3, 1, 4, 2],
-  "steps": [ /* ... */ ],
-  "operation_counts": { "compare": 10, "swap": 6 },
-  "truncated": false,
-  "max_steps": 2000
-}
-```
+### Obmedzenia sandboxu
 
----
+- statická kontrola (AST): zakázané moduly `os`, `sys`, `subprocess`, `socket`, `importlib`
+  a ďalšie, funkcie `eval`, `exec`, `open`, `getattr`, `__import__` a atribúty s dvoma
+  podčiarkovníkmi okrem bezpečných
+- samostatný proces s prázdnym prostredím, časový limit, na Linuxe limit pamäte a CPU
+- výstup `print` sa zachytí a vráti v poli `stdout`
+- prenos cez JSON: n-tice sa zmenia na zoznamy, kľúče slovníka na reťazce
 
-## 5. Kontrakt `tracker` (strana producenta)
+## 4. Tracker
 
-Plné rozhranie: `backend/app/tracker.py`. Generická forma `tracker.step(type, payload)`
-plus pohodlné skratky. Mapovanie skratiek na typy/roly krokov:
+| Skupina | Metódy |
+|---|---|
+| meranie | `count(nazov, k=1)` |
+| všeobecné | `step(typ, payload)`, `snapshot(label)`, `highlight(indexy, rola)`, `pointer(meno, index)` |
+| pole | `array(pole, labels)`, `compare(i, j)`, `swap(i, j)`, `set(i, hodnota)`, `pivot(i)`, `mark_sorted(indexy)` |
+| tabuľka | `grid(r, s, row_labels, col_labels, fill)`, `set_cell(r, s, hodnota, role)`, `read_cell(r, s)` |
+| graf | `graph(n, hrany, directed, weighted)`, `visit(v)`, `edge(u, v, rola)`, `relax(u, v, hodnota)`, `node_label(v, text)`, `node_role(v, rola)`, `frontier(prvky, meno)` |
+| strom | `tree(koreň, label, extra)`, `tree_arrays(values, left, right, root)`, `focus(id, rola)`, `mark_node(id, rola)`, `clear_marks()` |
+| text | `string(text, vzorka)`, `match(i, j)`, `mismatch(i, j)`, `shift(posun)`, `found(i)` |
 
-| Volanie trackera | `type` kroku | rola zvýraznenia |
-|------------------|--------------|------------------|
-| `tracker.compare(i, j)` | `compare` | `compare` |
-| `tracker.swap(i, j)` | `swap` | `swap` |
-| `tracker.pivot(i)` | `pivot` | `pivot` |
-| `tracker.highlight(idx, role)` | `highlight` | podľa `role` |
-| `tracker.mark_sorted(idx)` | `sorted` | `sorted` |
-| `tracker.set_cell(r, c, v)` | `set` | `active`/zadaná |
-| `tracker.match(i)` | `match` | `match` |
-| `tracker.pointer(name, i)` | (upraví `pointers`) | — |
+Všetky metódy, ktoré vytvárajú krok, majú voliteľný `label` a `code_line`. Pri meraní
+(`max_steps = 0`) tracker kroky nezaznamenáva, len počíta operácie, a snímky stromu ani
+obsah frontu nekopíruje.
 
-Executor po každom volaní doplní **plný snímok** aktuálneho `data` a po skončení
-spočíta `operation_counts` z výskytov jednotlivých `type`. Tie isté počty putujú
-aj do `ExperimentRun.operation_counts` → vizualizér a meranie zdieľajú zdroj dát.
+Roly zvýraznenia: `compare`, `swap`, `pivot`, `active`, `match`, `sorted`, `visited`,
+`tree`, `path`.
 
----
+## 5. Krok vizualizácie
 
-## 6. Rozsah (čo kontrakt zámerne nerieši)
+Spoločné polia: `kind`, `index`, `type`, `label`, voliteľne `code_line`.
 
-- **Grafové a rekurzívne algoritmy**: `CATEGORY_RENDERER` ich mapuje na `null`
-  (benchmark áno, krok-za-krokom vizualizácia je budúce rozšírenie — kap. 3.1.3).
-- **Multi-language**: `Algorithm.language` je zatiaľ pevne `"python"`, ale pole
-  existuje pre budúce rozšírenie.
-- **Bezpečnosť sandboxu**: kontrakt definuje len `status: error|timeout` a
-  `error_message`; samotná izolácia (Docker, `setrlimit`) je vec executora.
+| kind | Ďalšie polia |
+|---|---|
+| `array` | `array`, `highlights[{index, role}]`, `pointers{meno: index}`, `labels[]` |
+| `grid` | `grid[][]`, `highlights[{row, col, role}]`, `row_labels`, `col_labels` |
+| `graph` | `node_roles{v: rola}`, `edge_roles[{u, v, role}]`, `labels{v: text}`, `frontier{name, items}` a štruktúra grafu v `trace.structure` |
+| `tree` | `nodes[{id, label, children[], extra}]`, `root`, `highlights[{id, role}]` |
+| `string` | `value`, `pattern`, `offset`, `highlights`, `pattern_highlights` |
 
----
+Limity veľkosti vstupu pre vizualizáciu (`/api/info`, `viz_limits`): pole 60, tabuľka 15,
+graf 25 vrcholov, strom 31 uzlov, text 80 znakov.
 
-## 7. Ďalší krok (Fáza 0)
+## 6. REST API
 
-1. `frontend/src/api/client.ts` — `MockApiClient implements ApiClient` (in-memory dáta).
-2. Prepojiť stránky na `ApiClient` namiesto hardcoded `const` polí.
-3. Backend „tenký vertikálny rez": jeden sorting problém, sandboxovaný executor
-   pre jeden algoritmus, tracker → `/api/visualize` a `/api/experiments/{id}/run`.
+| Metóda a cesta | Účel |
+|---|---|
+| `GET /api/info` | počty, limity, či sú úpravy chránené heslom |
+| `GET /api/problems`, `GET /api/problems/{id}` | katalóg úloh |
+| `GET /api/algorithms`, `GET /api/problems/{id}/algorithms`, `GET /api/algorithms/{id}` | algoritmy |
+| `POST /api/problems/{id}/algorithms`, `PUT`, `DELETE /api/algorithms/{id}`, `POST .../duplicate` | vlastné algoritmy |
+| `GET /api/generators`, `GET /api/problems/{id}/generators`, `PUT`, `DELETE`, `POST .../duplicate` | generátory |
+| `POST /api/generators/{id}/preview`, `POST /api/generators/preview-code` | náhľad vstupu |
+| `GET`, `POST /api/experiments`, `GET`, `DELETE /api/experiments/{id}` | experimenty |
+| `POST /api/experiments/{id}/start`, `POST .../step`, `POST .../cancel`, `POST .../run` | vykonanie |
+| `GET /api/experiments/{id}/runs`, `GET .../results`, `GET .../export?format=csv\|json` | výsledky |
+| `POST /api/visualize` | stopa krokov pre algoritmus a vstup |
+| `POST /api/code/validate` | kontrola kódu bez spustenia |
+
+Ak je nastavené `EDIT_PASSWORD`, vytváranie a úprava vlastného kódu a spustenie neuloženého
+kódu vyžaduje hlavičku `X-Edit-Password`. Čítanie, vizualizácia vstavaných algoritmov
+a experimenty sú verejné.
+
+## 7. Výsledky a odhad zložitosti
+
+`GET /api/experiments/{id}/results` vráti pre každý algoritmus a variant body
+(priemer, minimum a maximum času, priemer operácií, počty chýb) a odhad:
+
+- `operations` a `time`: najlepšia trieda, druhá trieda, normalizovaná chyba, exponent k
+  z log-log regresie, istota `high`, `medium` alebo `low`
+- `declared`, `declared_case`: deklarovaná trieda a prípad (najlepší, priemerný, najhorší),
+  s ktorým sa odhad zhoduje
+- `agreement`: `match`, `mismatch` alebo `unknown`
+
+Postup je opísaný v `backend/app/analysis/complexity.py` a v `docs/ZMENY-rozsirenie.md`.

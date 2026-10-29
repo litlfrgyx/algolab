@@ -1,245 +1,147 @@
+import { Suspense, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { BookOpen, Code2, FlaskConical, LibraryBig, Lock, LockOpen, Menu, PlayCircle, X } from 'lucide-react'
+import { useEditAuth } from '../lib/auth'
+import { Button, Input, cx } from './ui'
 
-const navItems = [
-  { path: '/problems',    icon: 'list_alt',  label: 'Problem Library' },
-  { path: '/algorithms',  icon: 'code',      label: 'Code Editor' },
-  { path: '/generator',   icon: 'input',     label: 'Input Generator' },
-  { path: '/experiments', icon: 'science',   label: 'Experiment Suite' },
-  { path: '/results',     icon: 'analytics', label: 'Analytics Dashboard' },
-  { path: '/visualizer',  icon: 'play_circle', label: 'Visualizer' },
+const NAV = [
+  { to: '/', label: 'Úlohy', icon: LibraryBig, end: true },
+  { to: '/algorithms', label: 'Algoritmy', icon: Code2 },
+  { to: '/visualizer', label: 'Vizualizácia', icon: PlayCircle },
+  { to: '/experiments', label: 'Experimenty', icon: FlaskConical },
+  { to: '/guide', label: 'Príručka', icon: BookOpen },
 ]
 
-function SideNav() {
-  const location = useLocation()
+/** Značka: štyri stĺpce, ktoré sa práve zoradili. */
+export function Mark({ className }: { className?: string }) {
   return (
-    <nav style={{
-      position: 'fixed', left: 0, top: 0, height: '100%', width: 240, zIndex: 50,
-      background: '#191c21',
-      boxShadow: '1px 0 0 0 rgba(245,158,11,0.1)',
-      display: 'flex', flexDirection: 'column', paddingTop: 24, paddingBottom: 24,
-    }}>
-      {/* Logo */}
-      <div style={{ padding: '0 24px', marginBottom: 40 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-          <div style={{
-            width: 32, height: 32,
-            background: 'var(--surface-container-high)',
-            border: '1px solid var(--outline-variant)',
-            borderRadius: 4,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-          }}>
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <polygon points="11,2 20,6.5 20,15.5 11,20 2,15.5 2,6.5" stroke="#f59e0b" strokeWidth="1.5" fill="rgba(245,158,11,0.15)"/>
-              <circle cx="11" cy="11" r="3" fill="#f59e0b" opacity="0.9"/>
-            </svg>
+    <svg viewBox="0 0 24 24" className={className} aria-hidden>
+      <rect x="2" y="14" width="4" height="8" rx="1" fill="var(--accent)" opacity="0.45" />
+      <rect x="7.5" y="10" width="4" height="12" rx="1" fill="var(--accent)" opacity="0.65" />
+      <rect x="13" y="6" width="4" height="16" rx="1" fill="var(--accent)" opacity="0.85" />
+      <rect x="18.5" y="2" width="4" height="20" rx="1" fill="var(--accent)" />
+    </svg>
+  )
+}
+
+function EditLock() {
+  const { protectedMode, canEdit, unlock, lock } = useEditAuth()
+  const [open, setOpen] = useState(false)
+  const [value, setValue] = useState('')
+  if (!protectedMode) return null
+  if (canEdit) {
+    return (
+      <div className="flex items-center justify-between gap-2 px-2 text-[13px] text-ink-2">
+        <span className="flex items-center gap-2"><LockOpen className="size-4 text-ok" aria-hidden />Úpravy odomknuté</span>
+        <button className="text-ink-3 hover:text-ink underline cursor-pointer" onClick={lock}>Zamknúť</button>
+      </div>
+    )
+  }
+  return (
+    <div className="px-2 text-[13px]">
+      {!open ? (
+        <button onClick={() => setOpen(true)} className="flex items-center gap-2 text-ink-2 hover:text-ink cursor-pointer">
+          <Lock className="size-4" aria-hidden />Odomknúť úpravy
+        </button>
+      ) : (
+        <form
+          className="space-y-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            unlock(value)
+            setOpen(false)
+            setValue('')
+          }}
+        >
+          <label className="block text-ink-2" htmlFor="edit-pw">Heslo na vlastný kód</label>
+          <Input id="edit-pw" type="password" autoFocus value={value} onChange={(e) => setValue(e.target.value)} className="w-full" />
+          <div className="flex gap-2">
+            <Button size="sm" variant="primary" type="submit" disabled={!value}>Odomknúť</Button>
+            <Button size="sm" variant="ghost" type="button" onClick={() => setOpen(false)}>Zrušiť</Button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ color: '#f59e0b', fontFamily: 'Space Grotesk, sans-serif', fontWeight: 700, letterSpacing: '0.12em', fontSize: 15, lineHeight: 1 }}>
-              ALGO_ANALYZER
-            </span>
-            <span style={{ fontFamily: 'Space Grotesk, sans-serif', fontSize: 9, letterSpacing: '0.1em', color: 'var(--outline)', marginTop: 3, textTransform: 'uppercase' }}>
-              V1.0.0-STABLE
-            </span>
-          </div>
+        </form>
+      )}
+    </div>
+  )
+}
+
+function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const { info } = useEditAuth()
+  return (
+    <nav aria-label="Hlavná navigácia" className="flex h-full flex-col gap-6 px-3 py-4">
+      <div className="flex items-center gap-2.5 px-2">
+        <Mark className="size-7" />
+        <div className="leading-tight">
+          <p className="text-[15px] font-semibold">AlgoLab</p>
+          <p className="text-xs text-ink-3">Návrh a analýza algoritmov</p>
         </div>
-        <NavLink to="/experiments">
-          <button style={{
-            width: '100%', marginTop: 24,
-            background: 'var(--primary-container)', color: 'var(--on-primary-container)',
-            fontFamily: 'Space Grotesk, sans-serif', fontSize: 11,
-            textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700,
-            padding: '8px 16px', borderRadius: 4, border: 'none', cursor: 'pointer',
-            boxShadow: '0 0 15px rgba(245,158,11,0.2)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            transition: 'box-shadow 0.2s',
-          }}
-            onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 20px rgba(245,158,11,0.4)')}
-            onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 0 15px rgba(245,158,11,0.2)')}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
-            NEW EXPERIMENT
-          </button>
-        </NavLink>
       </div>
-
-      {/* Nav items */}
-      <div style={{ flex: 1, padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {navItems.map(item => {
-          const isActive = location.pathname === item.path
-          return (
+      <ul className="flex flex-col gap-0.5">
+        {NAV.map(({ to, label, icon: Icon, end }) => (
+          <li key={to}>
             <NavLink
-              key={item.path}
-              to={item.path}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                padding: '8px 16px',
-                cursor: 'pointer', borderRadius: '0 2px 2px 0',
-                fontFamily: 'Space Grotesk, sans-serif',
-                fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-                fontWeight: isActive ? 700 : 400,
-                textDecoration: 'none',
-                color: isActive ? '#f59e0b' : '#64748b',
-                boxShadow: isActive ? '0 0 12px rgba(245,158,11,0.3)' : 'none',
-                borderLeft: isActive ? '2px solid #f59e0b' : '2px solid transparent',
-                background: isActive ? '#272a30' : 'transparent',
-                transition: 'all 0.2s',
-                position: 'relative',
-              }}
+              to={to}
+              end={end}
+              onClick={onNavigate}
+              className={({ isActive }) =>
+                cx(
+                  'flex h-9 items-center gap-2.5 rounded-[var(--radius)] px-2.5 text-sm transition-colors',
+                  isActive ? 'bg-surface-3 text-ink font-medium' : 'text-ink-2 hover:bg-surface-2 hover:text-ink',
+                )
+              }
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 18, fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
-              >
-                {item.icon}
-              </span>
-              <span>{item.label}</span>
-              {isActive && (
-                <div style={{
-                  position: 'absolute', right: 8,
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: '#f59e0b', boxShadow: '0 0 8px rgba(245,158,11,0.8)',
-                }} />
-              )}
+              <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+              {label}
             </NavLink>
-          )
-        })}
-      </div>
-
-      {/* Footer */}
-      <div style={{ padding: '0 16px', marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {[{ icon: 'memory', label: 'System Status' }, { icon: 'settings', label: 'Settings' }].map(item => (
-          <div key={item.icon} style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '8px 16px', cursor: 'pointer',
-            color: '#64748b', borderRadius: 2,
-            fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-            transition: 'color 0.15s',
-          }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#4cd7f6')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#64748b')}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>{item.icon}</span>
-            <span>{item.label}</span>
-          </div>
+          </li>
         ))}
+      </ul>
+      <div className="mt-auto space-y-4">
+        <EditLock />
+        {info && (
+          <p className="px-2 text-xs text-ink-3 num">
+            {info.problems} úloh, {info.algorithms} algoritmov
+          </p>
+        )}
       </div>
     </nav>
   )
 }
 
-function TopBar() {
-  return (
-    <header style={{
-      position: 'fixed', top: 0, right: 0,
-      width: 'calc(100% - 240px)', zIndex: 40,
-      background: 'rgba(11,14,19,0.8)', backdropFilter: 'blur(20px)',
-      borderBottom: '1px solid #1e2530',
-      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      height: 64, padding: '0 32px',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-        {/* Search */}
-        <div style={{ position: 'relative', width: 256 }}>
-          <span className="material-symbols-outlined" style={{
-            position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-            color: 'var(--outline-variant)', fontSize: 18,
-          }}>search</span>
-          <input style={{
-            width: '100%', background: 'var(--surface-container-low)',
-            border: '1px solid rgba(83,68,52,0.3)', borderRadius: 4,
-            padding: '6px 16px 6px 40px', fontSize: 12,
-            fontFamily: 'JetBrains Mono, monospace', color: 'var(--on-surface)',
-            outline: 'none', transition: 'border-color 0.15s',
-          }} placeholder="QUERY ALGORITHM..." type="text" />
-        </div>
-        {/* Nav links */}
-        <nav style={{ display: 'flex', gap: 24 }}>
-          {['Terminal', 'Docs', 'Telemetry'].map(l => (
-            <a key={l} href="#" style={{
-              color: '#64748b', textDecoration: 'none',
-              fontFamily: 'Space Grotesk, sans-serif', fontSize: 11,
-              letterSpacing: '0.1em', textTransform: 'uppercase', transition: 'color 0.15s',
-            }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#4cd7f6')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#64748b')}
-            >{l}</a>
-          ))}
-        </nav>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderRight: '1px solid rgba(83,68,52,0.3)', paddingRight: 16 }}>
-          {[
-            { icon: 'history', badge: false },
-            { icon: 'notifications', badge: true },
-            { icon: 'account_tree', badge: false },
-          ].map(({ icon, badge }) => (
-            <button key={icon} style={{
-              width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#64748b', background: 'none', border: 'none', cursor: 'pointer',
-              transition: 'color 0.15s', position: 'relative',
-            }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#4cd7f6')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#64748b')}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>{icon}</span>
-              {badge && <div style={{
-                position: 'absolute', top: 6, right: 6,
-                width: 6, height: 6, borderRadius: '50%',
-                background: 'var(--primary-container)', boxShadow: '0 0 4px rgba(245,158,11,0.8)',
-              }} />}
-            </button>
-          ))}
-        </div>
-        <button style={{
-          fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, textTransform: 'uppercase',
-          letterSpacing: '0.12em', padding: '6px 16px',
-          border: '1px solid var(--outline-variant)', color: 'var(--on-surface)',
-          background: 'none', borderRadius: 4, cursor: 'pointer', transition: 'all 0.15s',
-        }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = '#4cd7f6'; e.currentTarget.style.color = '#4cd7f6' }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--outline-variant)'; e.currentTarget.style.color = 'var(--on-surface)' }}
-        >SAVE_STATE</button>
-        <button style={{
-          fontFamily: 'Space Grotesk, sans-serif', fontSize: 11, textTransform: 'uppercase',
-          letterSpacing: '0.12em', padding: '6px 16px',
-          background: 'var(--primary-container)', color: 'var(--on-primary-container)',
-          border: 'none', borderRadius: 4, cursor: 'pointer',
-          boxShadow: '0 0 12px rgba(245,158,11,0.3)',
-          display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700,
-          transition: 'box-shadow 0.15s',
-        }}
-          onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 0 20px rgba(245,158,11,0.5)')}
-          onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 0 12px rgba(245,158,11,0.3)')}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
-          EXECUTE_RUN
-        </button>
-      </div>
-    </header>
-  )
-}
-
 export default function Layout() {
+  const [open, setOpen] = useState(false)
   const location = useLocation()
+  const wide = location.pathname.startsWith('/visualizer')
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      <div className="analog-grain" />
-      <SideNav />
-      <TopBar />
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-          style={{ marginLeft: 240, height: '100vh', overflowY: 'auto' }}
-        >
-          <Outlet />
-        </motion.div>
-      </AnimatePresence>
+    <div className="min-h-dvh bg-ground">
+      <aside className="fixed inset-y-0 left-0 hidden w-[232px] border-r border-line bg-ground lg:block">
+        <Sidebar />
+      </aside>
+      <div className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b border-line bg-ground px-3 lg:hidden">
+        <button aria-label="Otvoriť menu" onClick={() => setOpen(true)} className="grid size-9 place-items-center rounded-[var(--radius)] hover:bg-surface-2 cursor-pointer">
+          <Menu className="size-5" aria-hidden />
+        </button>
+        <Mark className="size-6" />
+        <span className="font-semibold">AlgoLab</span>
+      </div>
+      {open && (
+        <div className="fixed inset-0 z-30 lg:hidden">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setOpen(false)} />
+          <aside className="absolute inset-y-0 left-0 w-[260px] bg-ground shadow-[var(--shadow-float)]">
+            <button aria-label="Zavrieť menu" onClick={() => setOpen(false)} className="absolute right-2 top-3 grid size-9 place-items-center rounded-[var(--radius)] hover:bg-surface-2 cursor-pointer">
+              <X className="size-5" aria-hidden />
+            </button>
+            <Sidebar onNavigate={() => setOpen(false)} />
+          </aside>
+        </div>
+      )}
+      <main className="lg:pl-[232px]">
+        <div className={cx('mx-auto px-4 py-6 sm:px-8 sm:py-8', wide ? 'max-w-[1480px]' : 'max-w-[1200px]')}>
+          <Suspense fallback={<div className="h-64 animate-pulse rounded-[var(--radius-lg)] bg-surface-2" />}>
+            <Outlet />
+          </Suspense>
+        </div>
+      </main>
     </div>
   )
 }

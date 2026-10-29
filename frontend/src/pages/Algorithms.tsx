@@ -1,123 +1,159 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import Editor from '@monaco-editor/react'
+import { useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Search } from 'lucide-react'
 import { api } from '../api'
-import type { Algorithm } from '../types'
+import { useAsync } from '../lib/hooks'
+import { LADDER, PARADIGM, PROPERTY, TOPICS, TOPIC_ORDER, prettyO, topicOf } from '../lib/labels'
+import { AlgorithmTable } from '../components/AlgorithmTable'
+import { Button, Empty, Field, Input, LoadError, PageHeader, Panel, Select, Skeleton, cx } from '../components/ui'
+import type { Paradigm } from '../types'
 
-const PROBLEM_ID = 'prob_sorting'
-
-function InfoCell({ label, value, color }: { label: string; value: string; color?: string }) {
-  return (
-    <div style={{ background: 'var(--surface-container)', padding: 8, borderRadius: 4 }}>
-      <span style={{ display: 'block', fontFamily: 'JetBrains Mono,monospace', fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--outline)', marginBottom: 4 }}>{label}</span>
-      <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, color: color ?? 'var(--secondary)' }}>{value}</span>
-    </div>
-  )
+function normalize(s: string) {
+  return s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase()
 }
 
-export default function Algorithms() {
-  const navigate = useNavigate()
-  const [algos, setAlgos] = useState<Algorithm[]>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
+const rank = (c: string | null) => (c ? LADDER.indexOf(c as (typeof LADDER)[number]) : -1)
 
-  useEffect(() => {
-    api.listAlgorithms(PROBLEM_ID).then((list) => {
-      setAlgos(list)
-      if (list.length) setActiveId(list[0].id)
-    })
+export default function Algorithms() {
+  const [params, setParams] = useSearchParams()
+  const state = useAsync(async () => {
+    const [algorithms, problems] = await Promise.all([api.algorithms(), api.problems()])
+    return { algorithms, problems }
   }, [])
 
-  const selected = algos.find((a) => a.id === activeId) ?? null
-  const lines = selected ? selected.code.split('\n').length : 0
+  const q = params.get('q') ?? ''
+  const topic = params.get('topic') ?? ''
+  const paradigm = params.get('paradigm') ?? ''
+  const maxAvg = params.get('max') ?? ''
+  const props = (params.get('props') ?? '').split(',').filter(Boolean)
+  const vizOnly = params.get('viz') === '1'
+  const origin = params.get('origin') ?? ''
+
+  const set = (key: string, value: string) => {
+    const next = new URLSearchParams(params)
+    if (value) next.set(key, value)
+    else next.delete(key)
+    setParams(next, { replace: true })
+  }
+  const toggleProp = (p: string) => {
+    const next = props.includes(p) ? props.filter((x) => x !== p) : [...props, p]
+    set('props', next.join(','))
+  }
+
+  const problemNames = useMemo(
+    () => Object.fromEntries((state.data?.problems ?? []).map((p) => [p.id, p.name])),
+    [state.data],
+  )
+
+  const filtered = useMemo(() => {
+    if (!state.data) return []
+    const problems = Object.fromEntries(state.data.problems.map((p) => [p.id, p]))
+    const nq = normalize(q.trim())
+    const order = Object.fromEntries(state.data.problems.map((p, i) => [p.id, i]))
+    return state.data.algorithms
+      .filter((a) => {
+        const p = problems[a.problem_id]
+        if (nq && !normalize(`${a.name} ${a.description} ${p?.name ?? ''}`).includes(nq)) return false
+        if (topic && (!p || topicOf(p.tags, p.category) !== topic)) return false
+        if (paradigm && a.paradigm !== paradigm) return false
+        if (maxAvg) {
+          const r = rank(a.complexity_time_avg)
+          if (r < 0 || r > rank(maxAvg)) return false
+        }
+        if (props.some((x) => !a.properties.includes(x))) return false
+        if (vizOnly && !a.supports_visualization) return false
+        if (origin === 'builtin' && !a.is_builtin) return false
+        if (origin === 'own' && a.is_builtin) return false
+        return true
+      })
+      .sort((x, y) => (order[x.problem_id] ?? 99) - (order[y.problem_id] ?? 99) || x.sort_order - y.sort_order)
+  }, [state.data, q, topic, paradigm, maxAvg, props, vizOnly, origin])
+
+  const active = q || topic || paradigm || maxAvg || props.length || vizOnly || origin
+  const usedProps = useMemo(() => {
+    const s = new Set<string>()
+    state.data?.algorithms.forEach((a) => a.properties.forEach((p) => s.add(p)))
+    return Object.keys(PROPERTY).filter((p) => s.has(p))
+  }, [state.data])
 
   return (
-    <div style={{ marginLeft: 0, marginTop: 64, height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* File list sidebar */}
-        <aside style={{ width: 280, background: 'var(--surface-container-low)', display: 'flex', flexDirection: 'column', boxShadow: '1px 0 15px rgba(0,0,0,0.5)', zIndex: 20 }}>
-          <div style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(83,68,52,0.1)' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk,sans-serif', fontSize: 11, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.2em' }}>Algoritmy problému</h2>
-            <button style={{ background: 'none', border: 'none', color: 'var(--outline-variant)', cursor: 'pointer' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
-            </button>
-          </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
-            <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--outline)', fontSize: 10, fontFamily: 'JetBrains Mono,monospace', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 8 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>folder_open</span> Comparison Sort
-            </div>
-            {algos.map((a) => (
-              <div key={a.id} onClick={() => setActiveId(a.id)} style={{
-                padding: '8px 12px', borderRadius: 2, cursor: 'pointer', marginBottom: 4,
-                background: activeId === a.id ? 'var(--surface-container-high)' : 'transparent',
-                borderLeft: activeId === a.id ? '1px solid var(--primary)' : '1px solid transparent',
-                boxShadow: activeId === a.id ? '0 0 10px rgba(245,158,11,0.1)' : 'none',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 13, color: activeId === a.id ? 'var(--primary)' : 'var(--on-surface)' }}>{a.name}</span>
-                  {a.is_reference && <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 8, color: 'var(--tertiary)', border: '1px solid var(--tertiary)', borderRadius: 2, padding: '1px 4px' }}>REF</span>}
-                </div>
-                <span style={{ fontFamily: 'Manrope,sans-serif', fontSize: 10, color: 'var(--outline-variant)', marginTop: 4, display: 'block' }}>
-                  {a.supports_visualization ? 'vizualizovateľný' : 'len benchmark'}
-                </span>
-              </div>
-            ))}
-          </div>
-        </aside>
+    <>
+      <PageHeader
+        title="Algoritmy"
+        lead="Všetky algoritmy zo všetkých úloh. Filtruj podľa témy, prístupu, zložitosti alebo vlastností."
+      />
+      {state.error && <LoadError error={state.error} onRetry={state.reload} />}
 
-        {/* Editor */}
-        <section style={{ flex: 1, background: 'var(--surface-container-lowest)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ height: 40, background: 'var(--surface-container)', display: 'flex', alignItems: 'flex-end', padding: '0 8px', gap: 4, borderBottom: '1px solid rgba(83,68,52,0.1)' }}>
-            <div style={{ background: 'var(--surface-container-lowest)', padding: '8px 16px', borderTop: '1px solid rgba(245,158,11,0.5)', color: 'var(--primary)', fontFamily: 'JetBrains Mono,monospace', fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, borderRadius: '4px 4px 0 0' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 14, fontVariationSettings: "'FILL' 1" }}>description</span>
-              {selected?.name ?? '—'}
-            </div>
+      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
+        <Field label="Hľadať">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-ink-3" aria-hidden />
+            <Input type="search" value={q} onChange={(e) => set('q', e.target.value)} placeholder="Názov alebo úloha" className="w-full pl-8" />
           </div>
-          <div style={{ flex: 1 }}>
-            <Editor height="100%" language="python" path={selected?.id} value={selected?.code ?? ''} theme="vs-dark"
-              options={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 13, lineHeight: 22, minimap: { enabled: false }, scrollBeyondLastLine: false, padding: { top: 16 }, renderLineHighlight: 'line' }} />
-          </div>
-        </section>
-
-        {/* Inspector panel */}
-        <aside style={{ width: 320, background: 'var(--surface-container-low)', borderLeft: '1px solid rgba(83,68,52,0.15)', display: 'flex', flexDirection: 'column', boxShadow: '-1px 0 15px rgba(0,0,0,0.3)', zIndex: 20 }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(83,68,52,0.1)' }}>
-            <h2 style={{ fontFamily: 'Space Grotesk,sans-serif', fontSize: 11, color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.2em', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--secondary)' }}>info</span>
-              Inšpektor modulu
-            </h2>
-          </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ background: 'var(--surface-container-high)', borderRadius: 4, padding: 16, border: '1px solid rgba(83,68,52,0.2)' }}>
-              <h3 style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 13, color: 'var(--primary)', marginBottom: 12 }}>{selected?.name ?? '—'}</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <InfoCell label="Jazyk" value={selected?.language ?? '—'} />
-                <InfoCell label="Riadkov" value={String(lines)} />
-                <InfoCell label="Referenčný" value={selected?.is_reference ? 'Áno' : 'Nie'} color={selected?.is_reference ? 'var(--tertiary)' : 'var(--outline)'} />
-                <InfoCell label="Vizualizácia" value={selected?.supports_visualization ? 'Áno' : 'Nie'} color={selected?.supports_visualization ? 'var(--tertiary)' : 'var(--outline)'} />
-              </div>
-            </div>
-            <button onClick={() => navigate('/visualizer')} disabled={!selected?.supports_visualization} style={{
-              width: '100%', background: 'var(--primary-container)', color: 'var(--on-primary-container)',
-              fontFamily: 'Space Grotesk,sans-serif', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.12em',
-              padding: '12px 16px', borderRadius: 4, border: 'none', cursor: selected?.supports_visualization ? 'pointer' : 'not-allowed',
-              opacity: selected?.supports_visualization ? 1 : 0.4, boxShadow: '0 0 15px rgba(245,158,11,0.2)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>play_circle</span>
-              SPUSTIŤ VIZUALIZÉR
-            </button>
-          </div>
-        </aside>
+        </Field>
+        <Field label="Téma">
+          <Select value={topic} onChange={(e) => set('topic', e.target.value)}>
+            <option value="">Všetky témy</option>
+            {TOPIC_ORDER.map((id) => <option key={id} value={id}>{TOPICS.find((t) => t.id === id)!.title}</option>)}
+          </Select>
+        </Field>
+        <Field label="Prístup">
+          <Select value={paradigm} onChange={(e) => set('paradigm', e.target.value)}>
+            <option value="">Všetky prístupy</option>
+            {(Object.keys(PARADIGM) as Paradigm[]).map((p) => <option key={p} value={p}>{PARADIGM[p]}</option>)}
+          </Select>
+        </Field>
+        <Field label="Čas v priemere najviac">
+          <Select value={maxAvg} onChange={(e) => set('max', e.target.value)}>
+            <option value="">Bez obmedzenia</option>
+            {['O(log n)', 'O(n)', 'O(n log n)', 'O(n^2)', 'O(n^3)'].map((c) => <option key={c} value={c}>{prettyO(c)}</option>)}
+          </Select>
+        </Field>
+        <Field label="Pôvod">
+          <Select value={origin} onChange={(e) => set('origin', e.target.value)}>
+            <option value="">Vstavané aj vlastné</option>
+            <option value="builtin">Len vstavané</option>
+            <option value="own">Len vlastné</option>
+          </Select>
+        </Field>
       </div>
 
-      {/* Status bar */}
-      <footer style={{ height: 32, background: 'var(--surface-container-highest)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', borderTop: '1px solid rgba(83,68,52,0.2)', fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: 'var(--outline)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--tertiary)' }} />
-          <span style={{ color: 'var(--tertiary)' }}>Python · def solve(data, tracker)</span>
-        </div>
-        <span>{algos.length} algoritmov · {lines} riadkov</span>
-      </footer>
-    </div>
+      <div className="mb-6 flex flex-wrap items-center gap-2" role="group" aria-label="Vlastnosti">
+        <button
+          onClick={() => set('viz', vizOnly ? '' : '1')}
+          aria-pressed={vizOnly}
+          className={cx('h-8 rounded-full border px-3 text-[13px] cursor-pointer transition-colors',
+            vizOnly ? 'border-accent bg-accent-soft text-accent' : 'border-line-strong text-ink-2 hover:bg-surface-2')}
+        >
+          dá sa vizualizovať
+        </button>
+        {usedProps.map((p) => (
+          <button
+            key={p}
+            onClick={() => toggleProp(p)}
+            aria-pressed={props.includes(p)}
+            className={cx('h-8 rounded-full border px-3 text-[13px] cursor-pointer transition-colors',
+              props.includes(p) ? 'border-accent bg-accent-soft text-accent' : 'border-line-strong text-ink-2 hover:bg-surface-2')}
+          >
+            {PROPERTY[p]}
+          </button>
+        ))}
+        {active ? (
+          <Button size="sm" variant="ghost" onClick={() => setParams(new URLSearchParams(), { replace: true })}>Zrušiť filtre</Button>
+        ) : null}
+      </div>
+
+      <Panel
+        title={state.data ? <h2 className="text-[15px] font-semibold num">{filtered.length} z {state.data.algorithms.length} algoritmov</h2> : 'Algoritmy'}
+      >
+        {!state.data && !state.error && <div className="space-y-2 p-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-9" />)}</div>}
+        {state.data && filtered.length === 0 && (
+          <Empty title="Filtrom nezodpovedá žiadny algoritmus" action={<Button size="sm" onClick={() => setParams(new URLSearchParams())}>Zrušiť filtre</Button>}>
+            Skús voľnejšiu hranicu zložitosti alebo menej vlastností.
+          </Empty>
+        )}
+        {filtered.length > 0 && <AlgorithmTable algorithms={filtered} problemNames={problemNames} />}
+      </Panel>
+    </>
   )
 }

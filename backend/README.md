@@ -1,77 +1,43 @@
-# ALGO_ANALYZER — Backend (tenký vertikálny rez)
+# Backend AlgoLab
 
-FastAPI + SQLite + sandboxovaný executor. Realizuje kontrakt z
-[`../CONTRACT.md`](../CONTRACT.md). Frontend sa naň napojí výmenou
-`MockApiClient` → `HttpApiClient` (jeden riadok v `frontend/src/api/index.ts`).
-
-## Štruktúra
+FastAPI, SQLAlchemy 2, Pydantic 2. Kód používateľa spúšťa balík `runner/algolab_sandbox`.
 
 ```
 app/
-  main.py          FastAPI app, CORS, štart (create_all + seed)
-  config.py        nastavenia (DATABASE_URL, CORS, limity)
-  db.py            SQLAlchemy engine + session
-  models.py        ORM tabuľky (Problem, Algorithm, Generator, Experiment, Run)
-  schemas.py       Pydantic DTO (zrkadlo TS typov)
-  seed.py          demo sorting problém (rovnaké id ako frontend)
-  executor.py      orchestrácia experimentu → ExperimentRun
-  sandbox/
-    runner.py      spustenie kódu v izolovanom procese (spawn) + timeout
-    tracker_impl.py  produkuje kroky (Step) + počíta operácie
-    limits.py      setrlimit (CPU/pamäť) — len Linux/Docker
-  routers/         problems, algorithms, generators, experiments, visualize
-smoke_test.py      overenie sandboxu + executora bez servera
+  main.py            aplikácia, CORS, inicializácia databázy
+  config.py          premenné prostredia
+  db.py              SQLite lokálne, PostgreSQL pri nasadení (schéma DB_SCHEMA, bez poolu)
+  models.py          tabuľky, SCHEMA_VERSION
+  schemas.py         kontrakt API (Pydantic)
+  seed.py            vytvorenie databázy a doplnenie vstavaného katalógu
+  deps.py            heslo na úpravy, ochrana vstavaných záznamov, kontrola kódu
+  executor.py        experiment po dávkach (start, step)
+  analysis/complexity.py   odhad triedy zložitosti z merania
+  sandbox/runner.py  spustenie lokálne alebo na vzdialenom runneri (RUNNER_URL)
+  catalog/           vstavané úlohy, algoritmy, generátory a experimenty
+  routers/           problems, algorithms, generators, experiments, visualize
+catalog_test.py      overenie celého katalógu
+smoke_test.py        test API
+experiments_report.py   tabuľka odhadu zložitosti pre všetky vstavané experimenty
 ```
 
-## Spustenie — lokálne (Windows/macOS/Linux, vývoj)
+## Premenné prostredia
 
-```
-cd backend
-python -m venv .venv
-.venv\Scripts\activate            # Windows  (macOS/Linux: source .venv/bin/activate)
-pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
-```
+| Premenná | Predvolená hodnota | Význam |
+|---|---|---|
+| `DATABASE_URL` | `sqlite:///./algoanalyzer.db` | databáza |
+| `DB_SCHEMA` | `algolab` | schéma v PostgreSQL |
+| `RUNNER_URL` | prázdne | adresa vzdialeného runnera, prázdne znamená lokálne |
+| `RUNNER_TOKEN` | prázdne | tajný token pre runner |
+| `EDIT_PASSWORD` | prázdne | heslo na vlastný kód |
+| `SANDBOX_TIMEOUT_MS` | 5000 | časový limit jedného behu |
+| `SANDBOX_MAX_TIMEOUT_MS` | 10000 | najvyšší povolený limit |
+| `STEP_BUDGET_S` | 15 | čas na jednu dávku experimentu |
+| `MAX_ALGORITHMS` | 8 | najviac algoritmov v experimente |
+| `CORS_ORIGINS` | localhost porty | povolené pôvody pri oddelenom frontende |
 
-API beží na `http://localhost:8000`, dokumentácia na `http://localhost:8000/docs`.
+## Pridanie úlohy do katalógu
 
-> **Pozor (bezpečnosť):** `resource.setrlimit` (CPU/pamäťový limit) funguje len na
-> Linuxe. Na Windows pri vývoji chráni iba timeout + izolácia procesu + zoznam
-> zakázaných importov. **Pre reálnu izoláciu používaj Docker.**
-
-## Spustenie — Docker (odporúčané, reálna izolácia)
-
-```
-cd backend
-docker compose up --build
-```
-
-## Overenie
-
-```
-python smoke_test.py        # sandbox + executor (rýchle, bez HTTP)
-```
-
-## Kľúčové endpointy
-
-| Endpoint | Popis |
-|---|---|
-| `POST /api/visualize` | spustí algoritmus s trackerom → `VisualizationTrace` |
-| `POST /api/experiments/{id}/run` | odbehne experiment (synchrónne) → uloží behy |
-| `GET /api/experiments/{id}/results` | agregované výsledky (min/avg/max, počty operácií) |
-| `POST /api/generators/{id}/preview` | reprodukovateľný náhľad vstupu |
-| `POST /api/code/validate` | statická kontrola (odmietne `import os` a pod.) |
-
-## Bezpečnostný model sandboxu
-
-1. **Statická AST kontrola** — zakázané importy (`os`, `sys`, `subprocess`, `socket`, …) a volania (`eval`, `open`, `__import__`).
-2. **Izolovaný proces** (`multiprocessing`, kontext `spawn`).
-3. **Timeout** → `terminate`.
-4. **Resource limity** (`setrlimit` CPU/pamäť) — Linux/Docker.
-5. **Docker** — izolácia FS a siete (primárna vrstva).
-
-## TODO (ďalšie kroky)
-
-- WebSocket progres počas behu (`/ws/experiments/{id}`) — teraz synchrónne.
-- `HttpApiClient` na frontende + prepnutie `src/api/index.ts`.
-- Grid/string tracker metódy (Fáza 2).
+Úloha je slovník v niektorom súbore `app/catalog/*.py` so zoznamom algoritmov, generátorov
+a experimentov. Po zmene stačí reštart, katalóg sa aktualizuje podľa odtlačku.
+Potom spusti `python catalog_test.py <id_úlohy>`.

@@ -1,270 +1,346 @@
-import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ChevronFirst, ChevronLast, ChevronLeft, ChevronRight, Dices, Pause, Play } from 'lucide-react'
 import { api } from '../api'
-import type { ArrayStep, HighlightRole, VisualizationTrace } from '../types'
-import { ROLE_COLOR } from '../types'
+import { useAsync } from '../lib/hooks'
+import { useEditAuth } from '../lib/auth'
+import { formatNumber, opsLabel } from '../lib/labels'
+import { ParamsForm, defaultParams } from '../components/ParamsForm'
+import { CodeView } from '../components/CodeView'
+import { RoleLegend, StepView } from '../components/viz/StepView'
+import { Button, Empty, Field, Input, LoadError, Notice, PageHeader, Panel, Select, Skeleton, Tag, cx } from '../components/ui'
+import type { Algorithm, InputGenerator, ProblemSummary, Scalar, VisualizationTrace } from '../types'
 
-// Vizualizácia beží len pre malé n; väčšie vstupy patria do benchmarku.
-const MAX_VIZ_N = 60
-const DEFAULT = [5, 3, 1, 4, 2]
+const SPEEDS = [
+  { ms: 1400, label: 'pomaly' },
+  { ms: 700, label: 'normálne' },
+  { ms: 300, label: 'rýchlo' },
+  { ms: 80, label: 'veľmi rýchlo' },
+]
 
-const TYPE_COLOR: Record<string, string> = {
-  compare: 'var(--secondary)',
-  swap: 'var(--primary)',
-  pivot: '#a78bfa',
-  sorted: 'var(--tertiary)',
-  done: 'var(--tertiary)',
+const COUNTED: Record<string, string> = {
+  compare: 'porovnania', swap: 'výmeny', set: 'zápisy', pivot: 'pivoty', visit: 'návštevy',
+  edge: 'hrany', relax: 'uvoľnenia', cell: 'bunky', match: 'zhody', mismatch: 'nezhody', shift: 'posuny',
+  focus: 'kroky v strome', structure: 'zmeny štruktúry',
 }
-const typeColor = (t: string) => TYPE_COLOR[t] ?? 'var(--outline)'
 
-function AlgoPanel({
-  trace,
-  step,
-  accent,
-}: {
-  trace: VisualizationTrace
-  step: number
-  accent: string
-}) {
-  const steps = trace.steps as ArrayStep[]
-  const s = steps[Math.min(step, steps.length - 1)]
-  const baseVals = steps[0]?.array ?? []
-  const maxVal = Math.max(...baseVals.map((v) => Math.abs(v)), 1)
-  const tlRef = useRef<HTMLDivElement>(null)
+function useCumulative(trace: VisualizationTrace | null) {
+  return useMemo(() => {
+    if (!trace) return []
+    const acc: Record<string, number> = {}
+    return trace.steps.map((s) => {
+      if (COUNTED[s.type]) acc[s.type] = (acc[s.type] ?? 0) + 1
+      return { ...acc }
+    })
+  }, [trace])
+}
 
-  useEffect(() => {
-    tlRef.current
-      ?.querySelector('[data-active=true]')
-      ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [step])
-
-  const roleByIndex = new Map<number, HighlightRole>()
-  s.highlights.forEach((h) => roleByIndex.set(h.index, h.role))
-  const pointerByIndex = new Map<number, string[]>()
-  if (s.pointers)
-    for (const [name, idx] of Object.entries(s.pointers)) {
-      const list = pointerByIndex.get(idx) ?? []
-      list.push(name)
-      pointerByIndex.set(idx, list)
-    }
-
-  const compares = trace.operation_counts.compare ?? 0
-  const swaps = trace.operation_counts.swap ?? 0
-
+function TracePanel({ trace, index, algorithm }: { trace: VisualizationTrace; index: number; algorithm?: Algorithm }) {
+  const total = trace.steps.length
+  const i = Math.min(index, total - 1)
+  const step = trace.steps[i]
+  const done = index >= total - 1
+  const cumulative = useCumulative(trace)[i] ?? {}
   return (
-    <div style={{ background: 'var(--surface-container-high)', borderRadius: 4, display: 'flex', flexDirection: 'column', border: '1px solid rgba(83,68,52,0.15)', overflow: 'hidden', flex: 1 }}>
-      {/* Header */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(83,68,52,0.2)', background: 'var(--surface-container-highest)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontFamily: 'Space Grotesk,sans-serif', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--on-surface)' }}>{trace.algorithm_name}</span>
-        <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 11, color: 'var(--outline)', display: 'flex', gap: 12 }}>
-          <span><span style={{ color: 'var(--secondary)' }}>{compares}</span> porovnaní</span>
-          <span><span style={{ color: 'var(--primary)' }}>{swaps}</span> výmen</span>
-        </span>
+    <Panel className="min-w-0 flex flex-col">
+      <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-4 pt-3.5">
+        <h2 className="text-[15px] font-semibold">{trace.algorithm_name}</h2>
+        <span className="text-[13px] text-ink-3 num">krok {formatNumber(i + 1)} z {formatNumber(total)}</span>
+      </header>
+      <p className="min-h-[3rem] px-4 pt-1 text-[15px] text-ink" aria-live="polite">
+        {step ? step.label : 'Bez krokov'}
+      </p>
+      <div className="flex-1 px-4 py-3">
+        <StepView step={step} trace={trace} />
       </div>
-
-      {/* Bars */}
-      <div style={{ flex: 1, padding: 16, display: 'flex', alignItems: 'flex-end', gap: 3, justifyContent: 'center', background: 'var(--surface-container-lowest)', minHeight: 140, maxHeight: 220 }}>
-        {s.array.map((val, i) => {
-          const role = roleByIndex.get(i)
-          const color = role ? ROLE_COLOR[role] : 'var(--surface-variant)'
-          const active = role !== undefined
-          const h = Math.max(8, (Math.abs(val) / maxVal) * 100)
-          const names = pointerByIndex.get(i)
-          return (
-            <motion.div key={i} layout transition={{ type: 'spring', stiffness: 500, damping: 35 }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, minWidth: 0 }}>
-              {active && <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 9, color: accent }}>{val}</span>}
-              <motion.div
-                animate={{ height: `${h}%` }}
-                transition={{ duration: 0.2 }}
-                style={{
-                  width: '100%', minHeight: 6, borderRadius: '2px 2px 0 0',
-                  background: active ? `${color}` : 'var(--surface-variant)',
-                  opacity: active ? 0.9 : 0.5,
-                  boxShadow: active ? `0 0 8px ${color}80` : 'none',
-                }}
-              />
-              {names && (
-                <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 9, color: 'var(--outline)' }}>{names.join(',')}</span>
-              )}
-            </motion.div>
-          )
-        })}
-      </div>
-
-      {/* Event + code line */}
-      <div style={{ padding: '8px 16px', background: 'var(--surface-container-low)', borderTop: '1px solid rgba(83,68,52,0.15)', borderBottom: '1px solid rgba(83,68,52,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 11, color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 5, height: 5, borderRadius: '50%', background: typeColor(s.type), boxShadow: `0 0 4px ${typeColor(s.type)}`, display: 'inline-block', flexShrink: 0 }} />
-          {s.label}
-        </span>
-        {s.code_line !== undefined && (
-          <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: 'var(--outline)' }}>riadok {s.code_line}</span>
-        )}
-      </div>
-
-      {/* Timeline */}
-      <div ref={tlRef} style={{ height: 100, overflowY: 'auto', background: 'var(--surface-container-lowest)' }}>
-        {steps.slice(0, Math.min(step + 1, steps.length)).map((st, i) => (
-          <div key={i} data-active={i === step} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 16px', borderLeft: `2px solid ${i === step ? accent : 'transparent'}`, background: i === step ? `${accent}14` : 'transparent' }}>
-            <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 9, color: 'var(--outline)', minWidth: 20, textAlign: 'right' }}>{i + 1}</span>
-            <span style={{ width: 4, height: 4, borderRadius: '50%', background: typeColor(st.type), flexShrink: 0 }} />
-            <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: i === step ? accent : 'var(--outline)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{st.label}</span>
+      <footer className="space-y-2 border-t border-line px-4 py-3 text-[13px]">
+        <p className="flex flex-wrap gap-x-4 gap-y-1 text-ink-2 num">
+          {Object.entries(cumulative).length === 0 && <span className="text-ink-3">Zatiaľ žiadna operácia</span>}
+          {Object.entries(cumulative).map(([k, v]) => (
+            <span key={k}>{COUNTED[k]} <span className="font-semibold text-ink">{formatNumber(v)}</span></span>
+          ))}
+        </p>
+        {done && (
+          <div className="flex flex-wrap items-center gap-2">
+            {trace.is_correct === true && <Tag tone="ok">výsledok je správny</Tag>}
+            {trace.is_correct === false && <Tag tone="bad">výsledok je nesprávny</Tag>}
+            {trace.check_message && <span className="text-ink-2">{trace.check_message}</span>}
+            {trace.truncated && <Tag tone="warn">záznam skrátený na {formatNumber(trace.max_steps)} krokov</Tag>}
           </div>
-        ))}
+        )}
+        {done && trace.stdout && (
+          <details><summary className="cursor-pointer text-ink-2">Výpis print</summary>
+            <pre className="mt-1 max-h-40 overflow-auto rounded bg-surface-2 p-2 text-[12px]">{trace.stdout}</pre>
+          </details>
+        )}
+        {algorithm && (
+          <details>
+            <summary className="cursor-pointer text-ink-2">Kód algoritmu</summary>
+            <div className="mt-2"><CodeView code={algorithm.code.trim()} maxHeight={360} /></div>
+          </details>
+        )}
+        {done && (
+          <p className="text-ink-3">
+            Celkom: {Object.entries(trace.operation_counts).filter(([k]) => k !== 'total').map(([k, v]) => `${opsLabel(k)} ${formatNumber(v)}`).join(', ') || 'bez počítaných operácií'}
+          </p>
+        )}
+      </footer>
+    </Panel>
+  )
+}
+
+function Player({ index, total, playing, speed, onIndex, onPlay, onSpeed }: {
+  index: number; total: number; playing: boolean; speed: number
+  onIndex: (i: number) => void; onPlay: (p: boolean) => void; onSpeed: (ms: number) => void
+}) {
+  const last = Math.max(0, total - 1)
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-[var(--radius-lg)] border border-line bg-surface px-3 py-2">
+      <div className="flex items-center gap-1">
+        <Button size="sm" variant="ghost" aria-label="Na začiatok" onClick={() => onIndex(0)} disabled={index === 0} icon={<ChevronFirst className="size-4" />} />
+        <Button size="sm" variant="ghost" aria-label="Predchádzajúci krok" onClick={() => onIndex(Math.max(0, index - 1))} disabled={index === 0} icon={<ChevronLeft className="size-4" />} />
+        <Button size="sm" variant="primary" className="w-24" onClick={() => onPlay(!playing)} disabled={total === 0}
+          icon={playing ? <Pause className="size-4" aria-hidden /> : <Play className="size-4" aria-hidden />}>
+          {playing ? 'Zastaviť' : index >= last && total > 0 ? 'Znova' : 'Prehrať'}
+        </Button>
+        <Button size="sm" variant="ghost" aria-label="Ďalší krok" onClick={() => onIndex(Math.min(last, index + 1))} disabled={index >= last} icon={<ChevronRight className="size-4" />} />
+        <Button size="sm" variant="ghost" aria-label="Na koniec" onClick={() => onIndex(last)} disabled={index >= last} icon={<ChevronLast className="size-4" />} />
       </div>
+      <input
+        type="range" min={0} max={last} value={Math.min(index, last)}
+        onChange={(e) => onIndex(Number(e.target.value))}
+        aria-label="Posun v krokoch"
+        className="h-1.5 min-w-[160px] flex-1 cursor-pointer accent-[var(--accent)]"
+      />
+      <span className="w-24 text-right text-[13px] text-ink-2 num">{formatNumber(Math.min(index, last) + (total ? 1 : 0))} / {formatNumber(total)}</span>
+      <Select aria-label="Rýchlosť" value={speed} onChange={(e) => onSpeed(Number(e.target.value))} className="h-8 text-[13px]">
+        {SPEEDS.map((s) => <option key={s.ms} value={s.ms}>{s.label}</option>)}
+      </Select>
     </div>
   )
 }
 
 export default function Visualizer() {
-  const [inputText, setInputText] = useState('5, 3, 1, 4, 2')
-  const [arr, setArr] = useState<number[]>(DEFAULT)
-  const [bTrace, setBTrace] = useState<VisualizationTrace | null>(null)
-  const [qTrace, setQTrace] = useState<VisualizationTrace | null>(null)
-  const [step, setStep] = useState(0)
+  const [params, setParams] = useSearchParams()
+  const { info } = useEditAuth()
+  const problemsState = useAsync(() => api.problems(), [])
+  const vizProblems = useMemo(
+    () => (problemsState.data ?? []).filter((p) => p.renderer !== 'none' && p.visualizable_count > 0),
+    [problemsState.data],
+  )
+  const problemId = params.get('problem') ?? vizProblems[0]?.id ?? ''
+  const problem: ProblemSummary | undefined = vizProblems.find((p) => p.id === problemId)
+
+  const detail = useAsync(async () => {
+    if (!problemId) return null
+    const [algorithms, generators] = await Promise.all([api.problemAlgorithms(problemId), api.problemGenerators(problemId)])
+    return { algorithms: algorithms.filter((a) => a.supports_visualization), generators }
+  }, [problemId])
+
+  const algs = detail.data?.algorithms ?? []
+  const aId = params.get('a') && algs.some((x) => x.id === params.get('a')) ? params.get('a')! : algs[0]?.id ?? ''
+  const bId = params.get('b') && algs.some((x) => x.id === params.get('b')) ? params.get('b')! : ''
+  const generator: InputGenerator | undefined = detail.data?.generators[0]
+
+  const limit = info?.viz_limits?.[problem?.renderer ?? 'array'] ?? 40
+  const [n, setN] = useState(10)
+  const [seed, setSeed] = useState(1)
+  const [genParams, setGenParams] = useState<Record<string, Scalar>>({})
+  const [input, setInput] = useState<unknown>(undefined)
+  const [inputFor, setInputFor] = useState('')
+  const [inputText, setInputText] = useState('')
+  const [inputError, setInputError] = useState<string | null>(null)
+  const [traces, setTraces] = useState<VisualizationTrace[]>([])
+  const [runError, setRunError] = useState<string | null>(null)
+  const [running, setRunning] = useState(false)
+  const [index, setIndex] = useState(0)
   const [playing, setPlaying] = useState(false)
-  const [speed, setSpeed] = useState(1)
-  const [loading, setLoading] = useState(true)
-  const [note, setNote] = useState<string | null>(null)
+  const [speed, setSpeed] = useState(700)
 
-  // Načítaj stopy z dátovej vrstvy pri zmene vstupu (kontrakt VisualizationTrace).
+  const setParam = (key: string, value: string) => {
+    const next = new URLSearchParams(params)
+    if (value) next.set(key, value)
+    else next.delete(key)
+    if (key === 'problem') { next.delete('a'); next.delete('b') }
+    setParams(next, { replace: true })
+  }
+
+  // nový generátor: predvolené parametre a veľkosť
   useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    Promise.all([
-      api.visualize({ algorithm_id: 'alg_bubble', input: arr, max_steps: 4000 }),
-      api.visualize({ algorithm_id: 'alg_quick', input: arr, max_steps: 4000 }),
-    ]).then(([b, q]) => {
-      if (cancelled) return
-      setBTrace(b)
-      setQTrace(q)
-      setStep(0)
-      setPlaying(false)
-      setLoading(false)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [arr])
+    if (!generator) return
+    setGenParams(defaultParams(generator.param_spec))
+    setN(Math.min(generator.viz_size, limit))
+    setSeed(1)
+  }, [generator, limit])
 
-  const maxSteps = Math.max(bTrace?.steps.length ?? 1, qTrace?.steps.length ?? 1)
+  // vygenerovať vstup
+  useEffect(() => {
+    if (!generator) return
+    let alive = true
+    api.preview(generator.id, n, genParams, seed)
+      .then((r) => {
+        if (!alive) return
+        if (r.error || r.input === null) {
+          setInputError(r.error ?? 'Vstup je príliš veľký na zobrazenie')
+          return
+        }
+        setInputError(null)
+        setInput(r.input)
+        setInputFor(generator.problem_id)
+        setInputText(JSON.stringify(r.input))
+      })
+      .catch((e) => alive && setInputError(e instanceof Error ? e.message : String(e)))
+    return () => { alive = false }
+  }, [generator, n, genParams, seed])
 
+  // spustiť vizualizáciu pri zmene vstupu alebo algoritmov
+  useEffect(() => {
+    if (input === undefined || !aId || inputFor !== problemId) return
+    if (!algs.some((a) => a.id === aId)) return
+    let alive = true
+    setRunning(true)
+    setRunError(null)
+    setPlaying(false)
+    const ids = [aId, bId].filter(Boolean)
+    Promise.all(ids.map((id) => api.visualize({ algorithm_id: id, input, max_steps: 3000 })))
+      .then((res) => {
+        if (!alive) return
+        setTraces(res)
+        setIndex(0)
+      })
+      .catch((e) => alive && setRunError(e instanceof Error ? e.message : String(e)))
+      .finally(() => alive && setRunning(false))
+    return () => { alive = false }
+    // algs sa mení spolu s problemId, stačí sledovať jeho identifikátor
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input, inputFor, aId, bId, problemId])
+
+  const total = Math.max(0, ...traces.map((t) => t.steps.length))
+
+  // prehrávanie
+  const timer = useRef<number | undefined>(undefined)
   useEffect(() => {
     if (!playing) return
-    if (step >= maxSteps - 1) {
-      setPlaying(false)
-      return
+    timer.current = window.setInterval(() => {
+      setIndex((i) => {
+        if (i >= total - 1) {
+          setPlaying(false)
+          return i
+        }
+        return i + 1
+      })
+    }, speed)
+    return () => window.clearInterval(timer.current)
+  }, [playing, speed, total])
+
+  const play = useCallback((p: boolean) => {
+    if (p && index >= total - 1) setIndex(0)
+    setPlaying(p)
+  }, [index, total])
+
+  // klávesnica: šípky a medzerník, ak sa nepíše do poľa
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || (e.target as HTMLElement)?.isContentEditable) return
+      if (e.key === 'ArrowRight') { setPlaying(false); setIndex((i) => Math.min(total - 1, i + 1)) }
+      else if (e.key === 'ArrowLeft') { setPlaying(false); setIndex((i) => Math.max(0, i - 1)) }
+      else if (e.key === ' ') { e.preventDefault(); play(!playing) }
     }
-    const id = setInterval(
-      () =>
-        setStep((s) => {
-          if (s >= maxSteps - 1) {
-            setPlaying(false)
-            return s
-          }
-          return s + 1
-        }),
-      900 / speed,
-    )
-    return () => clearInterval(id)
-  }, [playing, speed, maxSteps, step])
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [total, playing, play])
 
-  const commit = (values: number[]) => {
-    if (values.length > MAX_VIZ_N) {
-      setNote(`Vstup orezaný na ${MAX_VIZ_N} prvkov — vizualizácia je pre malé n; pre väčšie použi benchmark.`)
-      setArr(values.slice(0, MAX_VIZ_N))
-    } else {
-      setNote(null)
-      setArr(values)
+  const applyManual = () => {
+    try {
+      setInput(JSON.parse(inputText))
+      setInputError(null)
+    } catch {
+      setInputError('Vstup nie je platný JSON')
     }
   }
 
-  const load = () => {
-    const parsed = inputText
-      .split(',')
-      .map((s) => parseInt(s.trim(), 10))
-      .filter((n) => !isNaN(n))
-    if (parsed.length >= 2) commit(parsed)
-  }
-  const rand = () => {
-    const r = Array.from({ length: 9 }, () => Math.floor(Math.random() * 85) + 8)
-    setInputText(r.join(', '))
-    commit(r)
-  }
-
-  const pct = (Math.min(step + 1, maxSteps) / maxSteps) * 100
+  if (problemsState.error) return <LoadError error={problemsState.error} onRetry={problemsState.reload} />
 
   return (
-    <main style={{ marginTop: 64, padding: 32, height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }} className="bg-grid">
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 24, flexShrink: 0 }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--tertiary)', display: 'inline-block' }} />
-            <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 10, color: 'var(--tertiary)', letterSpacing: '0.15em' }}>STEP-BY-STEP VISUALIZER</span>
-          </div>
-          <h1 style={{ fontFamily: 'Space Grotesk,sans-serif', fontSize: 24, fontWeight: 300, letterSpacing: '0.05em', color: 'var(--on-surface)', textTransform: 'uppercase' }}>
-            Porovnávacia vizualizácia
-          </h1>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 12, color: 'var(--outline)' }}>Vstup:</span>
-          <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && load()}
-            style={{ width: 200, background: 'var(--surface-container-low)', border: '1px solid rgba(83,68,52,0.4)', color: 'var(--on-surface)', borderRadius: 4, padding: '6px 12px', fontFamily: 'JetBrains Mono,monospace', fontSize: 12, outline: 'none' }} />
-          <button onClick={rand} style={{ background: 'var(--surface-variant)', border: '1px solid var(--outline-variant)', color: 'var(--on-surface)', fontFamily: 'Space Grotesk,sans-serif', fontSize: 11, padding: '6px 14px', borderRadius: 4, cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Náhodný</button>
-          <button onClick={load} style={{ background: 'var(--primary-container)', color: 'var(--on-primary-container)', fontFamily: 'Space Grotesk,sans-serif', fontSize: 11, fontWeight: 700, padding: '6px 14px', borderRadius: 4, border: 'none', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase', boxShadow: '0 0 10px rgba(245,158,11,0.2)' }}>Načítať</button>
-        </div>
-      </div>
+    <>
+      <PageHeader
+        title="Vizualizácia"
+        lead="Algoritmus beží na skutočnom vstupe a každý jeho krok sa zaznamená. Krokuj šípkami alebo spusti prehrávanie. Druhý algoritmus dostane ten istý vstup."
+      />
 
-      {note && (
-        <div style={{ marginBottom: 12, fontFamily: 'JetBrains Mono,monospace', fontSize: 11, color: 'var(--primary)', flexShrink: 0 }}>⚠ {note}</div>
+      <Panel className="mb-4">
+        <div className="grid gap-3 p-4 md:grid-cols-3">
+          <Field label="Úloha">
+            <Select value={problemId} onChange={(e) => setParam('problem', e.target.value)}>
+              {vizProblems.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </Select>
+          </Field>
+          <Field label="Algoritmus">
+            <Select value={aId} onChange={(e) => setParam('a', e.target.value)} disabled={!algs.length}>
+              {algs.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </Select>
+          </Field>
+          <Field label="Porovnať s">
+            <Select value={bId} onChange={(e) => setParam('b', e.target.value)} disabled={algs.length < 2}>
+              <option value="">bez porovnania</option>
+              {algs.filter((a) => a.id !== aId).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </Select>
+          </Field>
+        </div>
+        <div className="grid grid-cols-2 items-end gap-3 px-4 pb-4 sm:grid-cols-[repeat(auto-fit,minmax(170px,240px))]">
+          <Field label={`Veľkosť n ≤ ${limit}`}>
+            <Input type="number" min={1} max={limit} value={n} className="num"
+              onChange={(e) => setN(Math.max(1, Math.min(limit, Number(e.target.value) || 1)))} />
+          </Field>
+          {generator && <ParamsForm spec={generator.param_spec} value={genParams} onChange={setGenParams} />}
+          <Button icon={<Dices className="size-4" aria-hidden />} onClick={() => setSeed((s) => s + 1)}>Nový vstup</Button>
+        </div>
+        <details className="border-t border-line px-4 py-2.5">
+          <summary className="cursor-pointer text-[13px] text-ink-2">Vstup ako JSON, dá sa upraviť ručne</summary>
+          <div className="mt-2 space-y-2">
+            <textarea
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              rows={3}
+              spellCheck={false}
+              aria-label="Vstup ako JSON"
+              className="w-full rounded-[var(--radius)] border border-line-strong bg-surface-2 p-2 font-mono text-[12px]"
+            />
+            <Button size="sm" onClick={applyManual}>Použiť tento vstup</Button>
+          </div>
+        </details>
+      </Panel>
+
+      {inputError && <div className="mb-4"><Notice tone="bad" title="Vstup sa nepodarilo pripraviť">{inputError}</Notice></div>}
+      {runError && <div className="mb-4"><Notice tone="bad" title="Vizualizácia zlyhala">{runError}</Notice></div>}
+
+      {(!problemsState.data || (detail.loading && !detail.data)) && <Skeleton className="h-[420px]" />}
+      {problemsState.data && vizProblems.length === 0 && <Empty title="Žiadna úloha s vizualizáciou" />}
+      {detail.data && algs.length === 0 && (
+        <Empty title="Táto úloha nemá algoritmus s vizualizáciou">
+          Vizualizovať sa dá algoritmus, ktorého funkcia solve prijíma parameter tracker.
+        </Empty>
       )}
 
-      {/* Panels */}
-      <div style={{ flex: 1, display: 'flex', gap: 24, minHeight: 0, marginBottom: 16 }}>
-        {loading || !bTrace || !qTrace ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--outline)', fontFamily: 'JetBrains Mono,monospace', fontSize: 12 }}>načítavam stopy…</div>
-        ) : (
-          <>
-            <AlgoPanel trace={bTrace} step={step} accent="#ffc174" />
-            <AlgoPanel trace={qTrace} step={step} accent="#4cd7f6" />
-          </>
-        )}
-      </div>
-
-      {/* Controls */}
-      <div style={{ background: 'rgba(54,57,63,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(83,68,52,0.2)', borderRadius: 4, padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-        <button onClick={() => setPlaying((p) => !p)} style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', cursor: 'pointer', background: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(245,158,11,0.3)', flexShrink: 0 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 28, fontVariationSettings: "'FILL' 1", color: 'var(--on-primary-container)' }}>
-            {playing ? 'pause' : 'play_arrow'}
-          </span>
-        </button>
-
-        {[
-          { icon: 'skip_previous', action: () => { setStep(0); setPlaying(false) } },
-          { icon: 'step_over', action: () => setStep((s) => Math.max(0, s - 1)) },
-          { icon: 'step_into', action: () => setStep((s) => Math.min(maxSteps - 1, s + 1)) },
-          { icon: 'skip_next', action: () => { setStep(maxSteps - 1); setPlaying(false) } },
-        ].map((b) => (
-          <button key={b.icon} onClick={b.action} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--outline-variant)', display: 'flex', alignItems: 'center' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 22 }}>{b.icon}</span>
-          </button>
-        ))}
-
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '0 8px' }}>
-          <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 11, color: 'var(--on-surface-variant)', minWidth: 64 }}>Krok {Math.min(step + 1, maxSteps)}</span>
-          <div style={{ flex: 1, height: 6, background: 'var(--surface-container-highest)', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
-            <motion.div animate={{ width: `${pct}%` }} transition={{ duration: 0.1 }} style={{ height: '100%', background: 'linear-gradient(90deg, #4cd7f6, #ffc174)', borderRadius: 4 }} />
+      {traces.length > 0 && (
+        <div className={cx('space-y-4 transition-opacity', running && 'opacity-60')}>
+          <Player index={index} total={total} playing={playing} speed={speed}
+            onIndex={(i) => { setPlaying(false); setIndex(i) }} onPlay={play} onSpeed={setSpeed} />
+          <RoleLegend kind={traces[0].renderer} />
+          <div className={cx('grid gap-4', traces.length > 1 && 'xl:grid-cols-2')}>
+            {traces.map((t, k) => (
+              <TracePanel key={`${t.algorithm_id}-${k}`} trace={t} index={index} algorithm={algs.find((a) => a.id === t.algorithm_id)} />
+            ))}
           </div>
-          <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 11, color: 'var(--outline)', minWidth: 36 }}>/ {maxSteps}</span>
+          {problem && (
+            <p className="text-[13px] text-ink-3">
+              Na malom vstupe sa rozdiel ukáže v počte krokov. Ako rastie s veľkosťou vstupu, ukáže{' '}
+              <Link className="text-accent underline" to={`/experiments/new?problem=${problem.id}`}>experiment</Link>.
+            </p>
+          )}
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: 'Space Grotesk,sans-serif', fontSize: 10, color: 'var(--outline)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Rýchlosť</span>
-          <input type="range" min={0.25} max={4} step={0.25} value={speed} onChange={(e) => setSpeed(+e.target.value)} style={{ width: 80, accentColor: 'var(--primary)', cursor: 'pointer' }} />
-          <span style={{ fontFamily: 'JetBrains Mono,monospace', fontSize: 11, color: 'var(--primary)', minWidth: 28 }}>{speed}×</span>
-        </div>
-      </div>
-    </main>
+      )}
+    </>
   )
 }

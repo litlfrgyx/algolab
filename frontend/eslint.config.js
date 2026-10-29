@@ -19,5 +19,12 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Načítanie dát a nastavenie predvolených hodnôt po zmene výberu je zámerne v efektoch.
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/preserve-manual-memoization': 'off',
+      // Pomocné funkcie žijú vedľa komponentov, ktoré ich používajú.
+      'react-refresh/only-export-components': 'off',
+    },
   },
 ])

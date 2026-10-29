@@ -1,47 +1,61 @@
-# Spustenie celého systému (frontend + backend)
+# Spustenie AlgoLab
 
-Frontend je teraz napojený na **reálny backend** (`HttpApiClient`). Treba bežať
-oboje. Predvolený base URL backendu je `http://localhost:8000`.
+## Lokálne na Windows
 
-## 1. Backend (terminál A)
+Backend (terminál A):
 
 ```
 cd backend
-.venv\Scripts\activate                # venv je už vytvorený a nainštalovaný
+.venv\Scripts\activate
+pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-API: `http://localhost:8000` · dokumentácia: `http://localhost:8000/docs`
-
-> Pre reálnu izoláciu sandboxu (Linux limity): `docker compose up --build`.
-
-## 2. Frontend (terminál B)
+Frontend (terminál B):
 
 ```
 cd frontend
-node_modules\.bin\vite.cmd --port 5180
+npm install
+node_modules\.bin\vite.cmd
 ```
 
-Otvor `http://localhost:5180`. CORS na backende povoľuje porty 5173, 5174, 5180.
+Otvor http://localhost:5173. Vite presmeruje `/api` na backend na porte 8000
+(`vite.config.ts`), takže netreba nastavovať CORS ani adresu API.
 
-## 3. Čo otestovať
+Databáza je súbor `backend/algoanalyzer.db`. Pri zmene schémy alebo katalógu sa doplní sama.
+Vymazaním súboru sa začne odznova.
 
-| Stránka | Reálne volá backend |
-|---|---|
-| Problems / Algorithms / Generator | zoznamy + **živý náhľad generátora** (sandbox spustí `generate`) |
-| **Visualizer** | `/api/visualize` → **reálne spustený Python** s trackerom |
-| **Experiments** | seedovaný `exp_sort` je „pending" → klikni **Spustiť experiment** (odbehne v sandboxe) |
-| **Results** | po spustení → grafy (čas / porovnania / pamäť), tabuľka, export CSV/JSON |
+## Lokálne v Dockeri
 
-## Prepínače (voliteľné)
+Na Linuxe v kontajneri platia aj limity pamäte a CPU sandboxu:
 
-- **Offline/demo bez backendu:** vytvor `frontend/.env.local` s `VITE_USE_MOCK=true`
-  → použije sa `MockApiClient`.
-- **Iný backend URL:** `VITE_API_BASE=http://host:port` v `frontend/.env.local`.
+```
+docker compose -f backend/docker-compose.yml up --build
+```
 
-## Overené (E2E)
+## Testy
 
-- CORS (allow-origin pre 5180, preflight OPTIONS) ✓
-- cross-origin `POST /api/visualize` → reálna stopa ✓
-- frontend `tsc` + `vite build` zelené ✓
-- backend `smoke_test.py` 19/19 ✓
+```
+cd backend
+python catalog_test.py          # všetky algoritmy katalógu na všetkých druhoch vstupu
+python smoke_test.py            # API cez TestClient: katalóg, ochrana, experiment, vizualizácia
+python experiments_report.py > ..\docs\OVERENIE-zlozitosti.md   # odhad zložitosti na všetkých experimentoch
+cd ..\frontend
+npm run build                   # kontrola typov a zostavenie
+npm run lint
+```
+
+`smoke_test.py` sa dá spustiť aj proti PostgreSQL: nastav `DATABASE_URL=postgresql://...`.
+
+## Nasadenie (Vercel a Supabase)
+
+1. Supabase: schéma `algolab` a rola `algolab_app` s heslom, ktorá má na schému právo
+   `USAGE, CREATE`. Tabuľky vytvorí aplikácia sama pri prvej požiadavke.
+2. Vercel projekt `algolab-runner` s koreňovým priečinkom `runner`, premenná `RUNNER_TOKEN`.
+3. Vercel projekt `algolab` z koreňa repozitára (`vercel.json`), premenné:
+   - `DATABASE_URL=postgresql://algolab_app.<ref>:<heslo>@<pooler>:6543/postgres`
+   - `DB_SCHEMA=algolab`
+   - `RUNNER_URL=https://<runner>.vercel.app`
+   - `RUNNER_TOKEN` rovnaký ako v runneri
+   - `EDIT_PASSWORD` heslo na vlastný kód, prázdne znamená bez ochrany
+4. Po nasadení over `/api/info` a spusti jeden experiment.
