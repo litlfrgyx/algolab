@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect x="2" y="14" width="4" height="8" rx="1" fill="#1f5f8b" opacity="0.45"/><rect x="7.5" y="10" width="4" height="12" rx="1" fill="#1f5f8b" opacity="0.65"/><rect x="13" y="6" width="4" height="16" rx="1" fill="#1f5f8b" opacity="0.85"/><rect x="18.5" y="2" width="4" height="20" rx="1" fill="#1f5f8b"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <style>
+    .i{stroke:#13294b}.a{stroke:#2d7be0}.f{fill:#2d7be0}.b{fill:#ffffff}
+    @media (prefers-color-scheme: dark){.i{stroke:#e4e9f1}.a{stroke:#4fc3f0}.f{fill:#4fc3f0}.b{fill:#121614}}
+  </style>
+  <path class="i" d="M20.5 8.5 H43.5" stroke-width="4.2"/>
+  <path class="i" d="M24.5 9 V23.5 L9.6 49.6 Q6.6 56.4 13.6 57 H50.4 Q57.4 56.4 54.4 49.6 L39.5 23.5 V9" stroke-width="4.2"/>
+  <path class="a" d="M14.5 50 L23 41.5 L31 45.5 L40 36.5 L48.5 28" stroke-width="3.4"/>
+  <path class="a f" d="M51.5 25 L44.6 26.4 L50.1 31.9 Z" stroke-width="1.6"/>
+  <circle class="b a" cx="23" cy="41.5" r="3" stroke-width="2.4"/>
+  <circle class="b a" cx="40" cy="36.5" r="3" stroke-width="2.4"/>
+</svg>

@@ -11,6 +11,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
   size?: 'sm' | 'md'
   icon?: ReactNode
+  iconRight?: ReactNode
   loading?: boolean
 }
 
@@ -22,7 +23,7 @@ const VARIANT: Record<Variant, string> = {
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'secondary', size = 'md', icon, loading, className, children, disabled, ...rest },
+  { variant = 'secondary', size = 'md', icon, iconRight, loading, className, children, disabled, ...rest },
   ref,
 ) {
   return (
@@ -40,6 +41,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     >
       {loading ? <Loader2 className="size-4 animate-spin" aria-hidden /> : icon}
       {children}
+      {iconRight}
     </button>
   )
 })

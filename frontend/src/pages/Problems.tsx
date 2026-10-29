@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ChevronRight, Search } from 'lucide-react'
 import { api } from '../api'
 import { useAsync } from '../lib/hooks'
-import { TOPICS, TOPIC_ORDER, topicOf, weeksLabel } from '../lib/labels'
+import { TOPICS, TOPIC_ORDER, topicOf } from '../lib/labels'
 import { Input, LoadError, PageHeader, Skeleton } from '../components/ui'
 import type { ProblemSummary } from '../types'
 
@@ -16,7 +16,6 @@ function normalize(s: string) {
 }
 
 function ProblemRow({ p }: { p: ProblemSummary }) {
-  const weeks = weeksLabel(p.tags)
   return (
     <li>
       <Link
@@ -31,7 +30,6 @@ function ProblemRow({ p }: { p: ProblemSummary }) {
           <p>{p.algorithm_count} {p.algorithm_count === 1 ? 'algoritmus' : p.algorithm_count < 5 ? 'algoritmy' : 'algoritmov'}</p>
           <p>
             {p.renderer === 'none' ? 'bez vizualizácie' : `vizualizácia: ${RENDERER_LABEL[p.renderer]}`}
-            {weeks ? `, ${weeks}` : ''}
           </p>
         </div>
         <ChevronRight className="size-4 text-ink-3 group-hover:text-accent" aria-hidden />
@@ -51,7 +49,7 @@ export default function Problems() {
     )
     const byTopic = new Map<string, ProblemSummary[]>()
     for (const p of list) {
-      const t = topicOf(p.tags, p.category)
+      const t = topicOf(p.category)
       byTopic.set(t, [...(byTopic.get(t) ?? []), p])
     }
     return TOPIC_ORDER.filter((id) => byTopic.has(id)).map((id) => ({

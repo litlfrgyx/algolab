@@ -1,4 +1,4 @@
-"""Abstraktné údajové typy z cvičení 3, 4 a 5 ÚSaA: zoznam, zásobník, front a halda."""
+"""Abstraktné údajové typy: zoznam, zásobník, front a halda."""
 
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ LIST_OPS = {
     "name": "Zoznam: operácie Cat a Cut",
     "summary": "Spájaj zoznamy a odstraňuj prvky. Pole alebo spájaný zoznam?",
     "description": (
-        "Úloha z cvičenia 3. Cat(L1, L2) pripojí L2 za L1, Cut(L, p) odstráni prvok na pozícii p. "
+        "Cat(L1, L2) pripojí L2 za L1, Cut(L, p) odstráni prvok na pozícii p. "
         "V poli treba pri Cat kopírovať prvky a pri Cut posúvať zvyšok poľa. Spájaný zoznam "
         "s ukazovateľom na koniec zvládne Cat v konštantnom čase, pri Cut však musí prejsť "
         "k pozícii p. Výhodnejšia implementácia závisí od toho, ktoré operácie prevládajú."
@@ -52,7 +52,6 @@ LIST_OPS = {
     "renderer": "none",
     "input_description": "Postupnosť operácií push, cat a cut (pozri popis generátora).",
     "output_description": "Objekt s hodnotami odstránenými operáciou Cut a s výsledným obsahom L1.",
-    "tags": ["usaa", "cv3"],
     "reference": "alg_list_array",
     "generators": [{
         "id": "gen_list_ops", "name": "Postupnosť operácií", "code": GEN_LIST_OPS,
@@ -63,7 +62,7 @@ LIST_OPS = {
     }],
     "algorithms": [
         {
-            "id": "alg_list_array", "name": "Zoznam v poli", "viz": False,
+            "id": "alg_list_array", "name": "Array list", "viz": False,
             "description": "Prvky sú v súvislom poli. Cat kopíruje prvky L2, Cut posúva prvky za pozíciou p.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n^2)", "worst": "O(n^2)", "space": "O(n)",
             "note": "Cat O(|L2|), Cut O(n − p) na operáciu", "param": "počet operácií",
@@ -91,7 +90,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_list_linked", "name": "Spájaný zoznam s ukazovateľom na koniec", "viz": False,
+            "id": "alg_list_linked", "name": "Linked list with tail pointer", "viz": False,
             "description": "Každý prvok je uzol s odkazom na nasledujúci. Cat len prepojí koniec L1 so začiatkom L2.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n^2)", "worst": "O(n^2)", "space": "O(n)",
             "note": "Cat O(1), Cut O(p) na operáciu", "param": "počet operácií",
@@ -194,7 +193,7 @@ STACK = {
     "name": "Zásobník",
     "summary": "Push, Pop a Top v poli a v spájanom zozname.",
     "description": (
-        "Úloha z cvičenia 4. Zásobník pridáva aj odoberá prvky na tom istom konci. "
+        "Zásobník pridáva aj odoberá prvky na tom istom konci. "
         "Obe implementácie majú každú operáciu v konštantnom čase, celá postupnosť n operácií "
         "je teda lineárna. Experiment ukazuje rozdiel v konštante a v pamäti."
     ),
@@ -203,7 +202,6 @@ STACK = {
     "renderer": "none",
     "input_description": "Postupnosť operácií push, pop a top.",
     "output_description": "Hodnoty vrátené operáciami pop a top v poradí, v akom boli zavolané.",
-    "tags": ["usaa", "cv4"],
     "reference": "alg_stack_array",
     "generators": [{
         "id": "gen_stack_ops", "name": "Postupnosť operácií", "code": GEN_STACK_OPS,
@@ -212,7 +210,7 @@ STACK = {
     }],
     "algorithms": [
         {
-            "id": "alg_stack_array", "name": "Zásobník v poli", "viz": False,
+            "id": "alg_stack_array", "name": "Array stack", "viz": False,
             "description": "Vrchol zásobníka je koniec poľa.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "note": "každá operácia O(1)", "param": "počet operácií",
@@ -231,7 +229,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_stack_linked", "name": "Zásobník v spájanom zozname", "viz": False,
+            "id": "alg_stack_linked", "name": "Linked list stack", "viz": False,
             "description": "Vrchol zásobníka je prvý uzol zoznamu.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "note": "každá operácia O(1)", "param": "počet operácií",
@@ -289,7 +287,7 @@ QUEUE = {
     "name": "Front",
     "summary": "Enqueue a Dequeue: posúvanie poľa, kruhové pole alebo spájaný zoznam.",
     "description": (
-        "Úloha z cvičenia 4. Front pridáva prvky na koniec a odoberá zo začiatku. Ak pole po "
+        "Front pridáva prvky na koniec a odoberá zo začiatku. Ak pole po "
         "každom odobratí posunie všetky prvky, stojí Dequeue lineárny čas a celá postupnosť je "
         "kvadratická. Kruhové pole a spájaný zoznam zvládnu každú operáciu v konštantnom čase."
     ),
@@ -298,7 +296,6 @@ QUEUE = {
     "renderer": "none",
     "input_description": "Postupnosť operácií enqueue, dequeue a front.",
     "output_description": "Hodnoty vrátené operáciami dequeue a front.",
-    "tags": ["usaa", "cv4"],
     "reference": "alg_queue_linked",
     "generators": [{
         "id": "gen_queue_ops", "name": "Postupnosť operácií", "code": GEN_QUEUE_OPS,
@@ -307,7 +304,7 @@ QUEUE = {
     }],
     "algorithms": [
         {
-            "id": "alg_queue_shift", "name": "Pole s posúvaním prvkov", "viz": False,
+            "id": "alg_queue_shift", "name": "Array with shifting", "viz": False,
             "description": "Začiatok frontu je vždy na indexe 0, preto Dequeue posunie všetky prvky.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n^2)", "worst": "O(n^2)", "space": "O(n)",
             "note": "Dequeue O(n)", "param": "počet operácií",
@@ -330,7 +327,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_queue_circular", "name": "Kruhové pole", "viz": False,
+            "id": "alg_queue_circular", "name": "Circular buffer", "viz": False,
             "description": "Indexy začiatku a konca sa posúvajú dokola. Pri zaplnení sa pole zdvojnásobí.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "note": "každá operácia amortizovane O(1)", "param": "počet operácií",
@@ -362,7 +359,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_queue_linked", "name": "Spájaný zoznam", "viz": False,
+            "id": "alg_queue_linked", "name": "Linked list queue", "viz": False,
             "description": "Uzly so začiatkom a koncom. Enqueue pridá uzol na koniec, Dequeue odoberie prvý.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "note": "každá operácia O(1)", "param": "počet operácií",
@@ -411,7 +408,7 @@ BUILD_HEAP = {
     "name": "Vytvorenie maximálnej haldy",
     "summary": "Preusporiadaj pole tak, aby každý rodič bol väčší ako jeho potomkovia.",
     "description": (
-        "Úloha z cvičenia 5 (BuildHeap). Halda je binárny strom uložený v poli: potomkovia prvku "
+        "Halda je binárny strom uložený v poli: potomkovia prvku "
         "na indexe i sú na indexoch 2i + 1 a 2i + 2. Postupné vkladanie prvkov stojí O(n log n), "
         "postup zdola (BuildHeap) len O(n). Platných háld z rovnakých čísel je viac, preto sa "
         "výsledok kontroluje podľa vlastnosti haldy, nie porovnaním s jednou odpoveďou."
@@ -421,7 +418,6 @@ BUILD_HEAP = {
     "renderer": "array",
     "input_description": "Pole celých čísel.",
     "output_description": "Pole s rovnakými prvkami, ktoré spĺňa vlastnosť maximálnej haldy.",
-    "tags": ["usaa", "cv5"],
     "checker": '''
 def check(input, output, expected=None):
     if sorted(output) != sorted(input):
@@ -440,7 +436,7 @@ def check(input, output, expected=None):
     }],
     "algorithms": [
         {
-            "id": "alg_heap_insert", "name": "Postupné vkladanie",
+            "id": "alg_heap_insert", "name": "Repeated insertion",
             "description": "Prvky sa vkladajú jeden po druhom na koniec haldy a vybublajú nahor, kým sú väčšie ako rodič.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n log n)", "space": "O(n)",
             "note": "na zoradenom vstupe O(n log n)", "param": "počet prvkov",
@@ -464,7 +460,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_heap_bottomup", "name": "BuildHeap zdola",
+            "id": "alg_heap_bottomup", "name": "Bottom-up BuildHeap",
             "description": "Od posledného rodiča po koreň sa každý prvok nechá klesnúť na správne miesto vo svojom podstrome.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(1)",
             "param": "počet prvkov", "properties": ["in_place"],

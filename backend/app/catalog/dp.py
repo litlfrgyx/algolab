@@ -1,4 +1,4 @@
-"""Dynamické programovanie z cvičení 3 a 4 ÚSaA a úlohy mimo predmetu."""
+"""Dynamic programming: Fibonacciho čísla, kombinačné číslo, reťazec matíc, rozmieňanie mincí."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ FIBONACCI = {
     "name": "Fibonacciho čísla",
     "summary": "Vypočítaj n-té Fibonacciho číslo F(n) = F(n-1) + F(n-2).",
     "description": (
-        "Úloha z cvičenia 3. Priamy prepis definície volá tie isté podproblémy stále znova, "
+        "Priamy prepis definície volá tie isté podproblémy stále znova, "
         "počet volaní rastie ako φⁿ. Zapamätanie výsledkov (memoizácia) alebo vyplnenie "
         "tabuľky zdola nahor znížia čas na O(n). Rýchle zdvojovanie potrebuje len O(log n) "
         "krokov, pri veľkom n však rozhoduje aj cena násobenia veľkých čísel."
@@ -22,7 +22,6 @@ FIBONACCI = {
     "renderer": "array",
     "input_description": "Celé číslo n ≥ 0.",
     "output_description": "Číslo F(n), pričom F(0) = 0 a F(1) = 1.",
-    "tags": ["usaa", "cv3"],
     "reference": "alg_fib_two",
     "generators": [{
         "id": "gen_fib", "name": "Číslo n", "code": GEN_NUMBER,
@@ -31,7 +30,7 @@ FIBONACCI = {
     }],
     "algorithms": [
         {
-            "id": "alg_fib_naive", "name": "Rekurzia podľa definície", "viz": False,
+            "id": "alg_fib_naive", "name": "Naive recursion", "viz": False,
             "description": "fib(n) = fib(n-1) + fib(n-2). Tie isté hodnoty sa počítajú mnohokrát.",
             "paradigm": "recursive", "best": "O(phi^n)", "avg": "O(phi^n)", "worst": "O(phi^n)",
             "space": "O(n)", "note": "φ ≈ 1,618", "param": "n", "properties": ["recursive"],
@@ -47,7 +46,7 @@ def solve(n, tracker):
 ''',
         },
         {
-            "id": "alg_fib_memo", "name": "Rekurzia s memoizáciou",
+            "id": "alg_fib_memo", "name": "Memoized recursion",
             "description": "Rovnaká rekurzia, ale každý vypočítaný výsledok sa uloží do tabuľky a znova sa nepočíta.",
             "paradigm": "dynamic_programming", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "param": "n", "properties": ["recursive"],
@@ -70,7 +69,7 @@ def solve(n, tracker):
 ''',
         },
         {
-            "id": "alg_fib_table", "name": "Tabuľka zdola nahor",
+            "id": "alg_fib_table", "name": "Bottom-up table",
             "description": "Vyplní tabuľku F(0), F(1), ..., F(n) zľava doprava.",
             "paradigm": "dynamic_programming", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "param": "n",
@@ -88,7 +87,7 @@ def solve(n, tracker):
 ''',
         },
         {
-            "id": "alg_fib_two", "name": "Dve premenné",
+            "id": "alg_fib_two", "name": "Two variables",
             "description": "Pamätá si len posledné dve hodnoty, preto stačí konštantná pamäť.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(1)",
             "param": "n",
@@ -106,7 +105,7 @@ def solve(n, tracker):
 ''',
         },
         {
-            "id": "alg_fib_doubling", "name": "Rýchle zdvojovanie", "viz": False,
+            "id": "alg_fib_doubling", "name": "Fast doubling", "viz": False,
             "description": "Využíva vzťahy F(2k) = F(k)·(2F(k+1) − F(k)) a F(2k+1) = F(k)² + F(k+1)².",
             "paradigm": "divide_and_conquer", "best": "O(log n)", "avg": "O(log n)", "worst": "O(log n)",
             "space": "O(log n)", "note": "počet aritmetických operácií", "param": "n",
@@ -164,7 +163,7 @@ BINOMIAL = {
     "name": "Kombinačné číslo",
     "summary": "Vypočítaj C(n, k), počet k-prvkových podmnožín n-prvkovej množiny.",
     "description": (
-        "Úloha z cvičenia 3. Pascalov vzťah C(n, k) = C(n-1, k-1) + C(n-1, k) vedie na "
+        "Pascalov vzťah C(n, k) = C(n-1, k-1) + C(n-1, k) vedie na "
         "exponenciálnu rekurziu. Tabuľka (Pascalov trojuholník) stojí O(n · k). "
         "Multiplikatívny vzorec potrebuje len k násobení a delení."
     ),
@@ -173,7 +172,6 @@ BINOMIAL = {
     "renderer": "grid",
     "input_description": "Objekt {\"n\": n, \"k\": k}, kde 0 ≤ k ≤ n.",
     "output_description": "Číslo C(n, k).",
-    "tags": ["usaa", "cv3"],
     "reference": "alg_binom_mult",
     "generators": [{
         "id": "gen_binom", "name": "Dvojica n, k", "code": GEN_BINOM,
@@ -184,7 +182,7 @@ BINOMIAL = {
     }],
     "algorithms": [
         {
-            "id": "alg_binom_naive", "name": "Rekurzia podľa Pascalovho vzťahu", "viz": False,
+            "id": "alg_binom_naive", "name": "Naive recursion (Pascal's rule)", "viz": False,
             "description": "C(n, k) = C(n-1, k-1) + C(n-1, k), C(n, 0) = C(n, n) = 1.",
             "paradigm": "recursive", "best": "O(1)", "avg": "O(2^n)", "worst": "O(2^n)",
             "space": "O(n)", "note": "počet volaní je približne 2 · C(n, k), pri k = n/2 rastie ako 2ⁿ/√n", "param": "n",
@@ -201,7 +199,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_binom_memo", "name": "Rekurzia s memoizáciou",
+            "id": "alg_binom_memo", "name": "Memoized recursion",
             "description": "Rekurzia podľa Pascalovho vzťahu, výsledky sa ukladajú do tabuľky.",
             "paradigm": "dynamic_programming", "best": "O(n^2)", "avg": "O(n^2)", "worst": "O(n^2)",
             "space": "O(n^2)", "note": "O(n · k), pri k = n/2 je to O(n²)", "param": "n", "properties": ["recursive"],
@@ -224,7 +222,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_binom_table", "name": "Pascalov trojuholník v tabuľke",
+            "id": "alg_binom_table", "name": "Pascal's triangle",
             "description": "Vyplní tabuľku po riadkoch. Každá bunka je súčet bunky nad ňou a bunky vľavo hore.",
             "paradigm": "dynamic_programming", "best": "O(n^2)", "avg": "O(n^2)", "worst": "O(n^2)",
             "space": "O(n^2)", "note": "O(n · k), pri k = n/2 je to O(n²)", "param": "n",
@@ -246,7 +244,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_binom_mult", "name": "Multiplikatívny vzorec", "viz": False,
+            "id": "alg_binom_mult", "name": "Multiplicative formula", "viz": False,
             "description": "C(n, k) = n/1 · (n-1)/2 · ... · (n-k+1)/k. Každý medzivýsledok je celé číslo.",
             "paradigm": "iterative", "best": "O(1)", "avg": "O(n)", "worst": "O(n)", "space": "O(1)",
             "note": "O(k) násobení, k ≤ n/2", "param": "n",
@@ -294,7 +292,7 @@ MATRIX_CHAIN = {
     "name": "Násobenie reťazca matíc",
     "summary": "Nájdi uzátvorkovanie, pri ktorom súčin matíc A₁ · A₂ · ... · Aₙ stojí najmenej násobení.",
     "description": (
-        "Úloha z cvičenia 4. Skúšanie všetkých uzátvorkovaní rastie exponenciálne. Tabuľka "
+        "Skúšanie všetkých uzátvorkovaní rastie exponenciálne. Tabuľka "
         "m[i][j] s najlacnejším súčinom matíc i až j sa vypĺňa podľa dĺžky úseku a stojí O(n³)."
     ),
     "category": "dynamic_programming",
@@ -302,7 +300,6 @@ MATRIX_CHAIN = {
     "renderer": "grid",
     "input_description": "Zoznam p dĺžky n + 1. Matica i má rozmer p[i-1] × p[i].",
     "output_description": "Najmenší počet skalárnych násobení.",
-    "tags": ["usaa", "cv4"],
     "reference": "alg_chain_dp",
     "generators": [{
         "id": "gen_chain", "name": "Rozmery matíc", "code": GEN_CHAIN,
@@ -311,7 +308,7 @@ MATRIX_CHAIN = {
     }],
     "algorithms": [
         {
-            "id": "alg_chain_naive", "name": "Rekurzia cez všetky delenia", "viz": False,
+            "id": "alg_chain_naive", "name": "Naive recursion", "viz": False,
             "description": "Pre každý úsek skúsi každé miesto posledného násobenia a rekurzívne vyrieši obe časti.",
             "paradigm": "recursive", "best": "O(3^n)", "avg": "O(3^n)", "worst": "O(3^n)",
             "space": "O(n)", "note": "počet volaní je 3ⁿ⁻¹", "param": "počet matíc",
@@ -333,7 +330,7 @@ def solve(p, tracker):
 ''',
         },
         {
-            "id": "alg_chain_memo", "name": "Rekurzia s memoizáciou",
+            "id": "alg_chain_memo", "name": "Memoized recursion",
             "description": "Rovnaká rekurzia, cena každého úseku sa vypočíta len raz.",
             "paradigm": "dynamic_programming", "best": "O(n^3)", "avg": "O(n^3)", "worst": "O(n^3)",
             "space": "O(n^2)", "param": "počet matíc", "properties": ["recursive"],
@@ -359,7 +356,7 @@ def solve(p, tracker):
 ''',
         },
         {
-            "id": "alg_chain_dp", "name": "Tabuľka podľa dĺžky úseku",
+            "id": "alg_chain_dp", "name": "Bottom-up dynamic programming",
             "description": "Najprv vyplní úseky dĺžky 1, potom 2 a tak ďalej až po celý reťazec.",
             "paradigm": "dynamic_programming", "best": "O(n^3)", "avg": "O(n^3)", "worst": "O(n^3)",
             "space": "O(n^2)", "param": "počet matíc",
@@ -405,16 +402,16 @@ def solve(p, tracker):
 #  Rozmieňanie mincí
 # ----------------------------------------------------------------------
 COIN_SETS = {
-    "kurz": "mince 100, 25, 20, 5, 1 (z cvičenia)",
+    "nekanonicka": "mince 100, 25, 20, 5, 1",
     "kanonicka": "mince 50, 20, 10, 5, 2, 1 (euro)",
 }
 
 GEN_COINS = '''
 import random
 
-COINS = {"kurz": [100, 25, 20, 5, 1], "kanonicka": [50, 20, 10, 5, 2, 1]}
+COINS = {"nekanonicka": [100, 25, 20, 5, 1], "kanonicka": [50, 20, 10, 5, 2, 1]}
 
-def generate(n, coin_set="kurz", mode="random", seed=42):
+def generate(n, coin_set="nekanonicka", mode="random", seed=42):
     """Suma na rozmenenie a sada mincí. Pri mode="exact" je suma presne n."""
     rnd = random.Random(seed)
     amount = n if mode == "exact" else n + rnd.randint(0, max(1, n // 10))
@@ -442,9 +439,9 @@ COIN_CHANGE = {
     "name": "Rozmieňanie mincí",
     "summary": "Rozmeň sumu na čo najmenej mincí z danej sady.",
     "description": (
-        "Úloha z cvičenia 4. Pažravý algoritmus berie vždy najväčšiu mincu, ktorá sa ešte "
+        "Greedy algoritmus berie vždy najväčšiu mincu, ktorá sa ešte "
         "zmestí. Pri eurových minciach dá vždy optimum, pri sade 100, 25, 20, 5, 1 nie: "
-        "sumu 40 rozmení na 25 + 5 + 5 + 5 namiesto 20 + 20. Dynamické programovanie "
+        "sumu 40 rozmení na 25 + 5 + 5 + 5 namiesto 20 + 20. Dynamic programming "
         "vypočíta optimum pre každú sumu od 0 po cieľovú."
     ),
     "category": "dynamic_programming",
@@ -452,7 +449,6 @@ COIN_CHANGE = {
     "renderer": "array",
     "input_description": "Objekt {\"coins\": sada mincí, \"amount\": suma}. Sada vždy obsahuje mincu 1.",
     "output_description": "Zoznam použitých mincí.",
-    "tags": ["usaa", "cv4"],
     "reference": "alg_coins_dp",
     "checker": CHECK_COINS,
     "generators": [{
@@ -460,13 +456,13 @@ COIN_CHANGE = {
         "description": "Suma približne n a jedna z dvoch sád mincí.",
         "sizes": [1000, 2000, 4000, 8000, 16000], "viz_size": 40, "test_size": 40,
         "params": [
-            enum("coin_set", "Sada mincí", COIN_SETS, "kurz"),
+            enum("coin_set", "Sada mincí", COIN_SETS, "nekanonicka"),
             enum("mode", "Suma", {"random": "n plus náhodný posun", "exact": "presne n"}, "random"),
         ],
     }],
     "algorithms": [
         {
-            "id": "alg_coins_greedy", "name": "Pažravý algoritmus",
+            "id": "alg_coins_greedy", "name": "Greedy",
             "description": "Opakovane vezme najväčšiu mincu, ktorá nepresiahne zvyšok sumy.",
             "paradigm": "greedy", "best": "O(n)", "avg": "O(n)", "worst": "O(n)",
             "space": "O(n)", "note": "suma a, najviac a/c odberov najväčšej mince c", "param": "suma",
@@ -488,7 +484,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_coins_dp", "name": "Dynamické programovanie",
+            "id": "alg_coins_dp", "name": "Dynamic programming",
             "description": "best[s] je najmenší počet mincí pre sumu s. Pre každú mincu c platí best[s] ≤ best[s - c] + 1.",
             "paradigm": "dynamic_programming", "best": "O(n)", "avg": "O(n)", "worst": "O(n)",
             "space": "O(n)", "note": "O(a · k), a je suma, k počet druhov mincí", "param": "suma",
@@ -519,11 +515,11 @@ def solve(data, tracker):
         },
     ],
     "experiments": [{
-        "id": "exp_coins", "name": "Pažravý algoritmus oproti dynamickému programovaniu",
+        "id": "exp_coins", "name": "Greedy oproti dynamic programming",
         "algorithms": ["alg_coins_greedy", "alg_coins_dp"], "generator": "gen_coins",
         "sizes": [1000, 2000, 4000, 8000, 16000], "repeats": 3,
         "variants": [
-            {"label": "sada z cvičenia", "params": {"coin_set": "kurz"}},
+            {"label": "mince 100, 25, 20, 5, 1", "params": {"coin_set": "nekanonicka"}},
             {"label": "eurové mince", "params": {"coin_set": "kanonicka"}},
         ],
     }],

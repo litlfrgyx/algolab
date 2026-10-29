@@ -341,7 +341,7 @@ class RecordingTracker:
     # ------------------------------------------------------------------
     def tree_arrays(self, values: Sequence[Any], left: Sequence[int], right: Sequence[int],
                     root: int, *, label: str | None = None, code_line: int | None = None) -> None:
-        """Strom v reprezentácii z cvičenia 6 ÚSaA: indexy potomkov, 0 = prázdny podstrom."""
+        """Strom v troch poliach: indexy potomkov, 0 = prázdny podstrom."""
         self.renderer = "tree"
         if not self.recording:
             return

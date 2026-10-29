@@ -5,7 +5,7 @@ export function CodeView({ code, activeLine, maxHeight }: { code: string; active
   const lines = code.split('\n')
   return (
     <pre
-      className="overflow-auto rounded-[var(--radius)] bg-surface-2 py-2 text-[12.5px] leading-[1.6]"
+      className="min-w-0 max-w-full overflow-auto rounded-[var(--radius)] bg-surface-2 py-2 text-[12.5px] leading-[1.6]"
       style={{ maxHeight }}
     >
       <code className="block min-w-max">

@@ -1,4 +1,4 @@
-"""Implementácie množiny z cvičení 5 a 12 ÚSaA: zoznam, stromy a hašovacie tabuľky."""
+"""Implementácie množiny: zoznam, stromy a hašovacie tabuľky."""
 
 from __future__ import annotations
 
@@ -94,7 +94,7 @@ SET_OPS = {
     "name": "Operácie nad množinou",
     "summary": "Vykonaj postupnosť vkladaní, hľadaní a mazaní a vráť výsledky hľadaní.",
     "description": (
-        "Úloha z cvičení 5 a 12. Rovnakú množinu možno uložiť do neusporiadaného zoznamu, "
+        "Rovnakú množinu možno uložiť do neusporiadaného zoznamu, "
         "binárneho vyhľadávacieho stromu, vyváženého AVL stromu, 2-3 stromu alebo hašovacej "
         "tabuľky. Zoznam stojí O(n) na operáciu. Nevyvážený strom degeneruje pri vzostupne "
         "vkladaných kľúčoch. Hašovacia tabuľka je v priemere najrýchlejšia, ale pri zlých "
@@ -105,7 +105,6 @@ SET_OPS = {
     "renderer": "tree",
     "input_description": "Zoznam operácií [\"insert\", x], [\"find\", x] alebo [\"delete\", x], x je nezáporné celé číslo.",
     "output_description": "Objekt {\"found\": výsledky hľadaní v poradí, \"items\": zoradený obsah množiny na konci}.",
-    "tags": ["usaa", "cv5", "cv12"],
     "checker": CHECK_SET,
     "generators": [{
         "id": "gen_set_ops", "name": "Postupnosť operácií", "code": GEN_SET_OPS,
@@ -115,7 +114,7 @@ SET_OPS = {
     }],
     "algorithms": [
         {
-            "id": "alg_set_list", "name": "Neusporiadaný zoznam", "viz": False,
+            "id": "alg_set_list", "name": "Unsorted list", "viz": False,
             "description": "Prvky sú v zozname v poradí vloženia. Hľadanie prechádza zoznam od začiatku.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n^2)", "worst": "O(n^2)",
             "space": "O(n)", "note": "O(n) na operáciu, n je počet operácií", "param": "počet operácií",
@@ -147,7 +146,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_set_bst", "name": "Binárny vyhľadávací strom",
+            "id": "alg_set_bst", "name": "Binary search tree",
             "description": "Menšie kľúče idú doľava, väčšie doprava. Mazanie uzla s dvoma potomkami ho nahradí najmenším kľúčom pravého podstromu.",
             "paradigm": "data_structure", "best": "O(n log n)", "avg": "O(n log n)", "worst": "O(n^2)",
             "space": "O(n)", "note": "O(h) na operáciu, pri vzostupných kľúčoch h = n", "param": "počet operácií",
@@ -235,7 +234,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_set_avl", "name": "AVL strom",
+            "id": "alg_set_avl", "name": "AVL tree",
             "description": "Binárny vyhľadávací strom, ktorý po každej zmene rotáciami udrží rozdiel výšok podstromov najviac 1.",
             "paradigm": "data_structure", "best": "O(n log n)", "avg": "O(n log n)", "worst": "O(n log n)",
             "space": "O(n)", "note": "O(log n) na operáciu", "param": "počet operácií",
@@ -363,7 +362,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_set_23", "name": "2-3 strom",
+            "id": "alg_set_23", "name": "2-3 tree",
             "description": "Uzol má jeden alebo dva kľúče a všetky listy sú v rovnakej hĺbke. Preplnený uzol sa rozdelí, podtečený si požičia kľúč od súrodenca alebo sa s ním zlúči.",
             "paradigm": "data_structure", "best": "O(n log n)", "avg": "O(n log n)", "worst": "O(n log n)",
             "space": "O(n)", "note": "O(log n) na operáciu", "param": "počet operácií",
@@ -511,7 +510,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_set_chain", "name": "Hašovanie so zreťazením (m = 1009)", "viz": False,
+            "id": "alg_set_chain", "name": "Hashing with chaining (m = 1009)", "viz": False,
             "description": "Tabuľka má pevne 1009 políčok. Kľúče s rovnakou hodnotou x mod 1009 sú v spoločnom zozname.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n)", "note": "priemerne O(1 + n/m) na operáciu, pri kolíziách O(n)",
@@ -549,7 +548,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_set_linear", "name": "Otvorené adresovanie, lineárne skúšanie", "viz": False,
+            "id": "alg_set_linear", "name": "Open addressing, linear probing", "viz": False,
             "description": "Pri kolízii skúša nasledujúce políčka. Zmazané políčko dostane značku, aby hľadanie nezastalo. Pri zaplnení nad polovicu sa tabuľka zväčší.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n)", "note": "zhluky kľúčov predlžujú skúšanie", "param": "počet operácií",
@@ -632,7 +631,7 @@ def solve(ops, tracker):
 ''',
         },
         {
-            "id": "alg_set_quadratic", "name": "Otvorené adresovanie, kvadratické skúšanie", "viz": False,
+            "id": "alg_set_quadratic", "name": "Open addressing, quadratic probing", "viz": False,
             "description": "Pri kolízii skúša políčka vo vzdialenosti 1, 4, 9, 16 a ďalej. Tým sa zmenšia zhluky. Veľkosť tabuľky je prvočíslo a zaplnenie najviac polovica.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n)", "note": "prvočíselné m a zaplnenie do 1/2 zaručia voľné políčko",

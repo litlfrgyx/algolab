@@ -3,7 +3,7 @@ import { ArrowLeft, FlaskConical, PlayCircle, Plus } from 'lucide-react'
 import { api } from '../api'
 import { useAsync } from '../lib/hooks'
 import { useEditAuth } from '../lib/auth'
-import { CATEGORY, weeksLabel } from '../lib/labels'
+import { CATEGORY } from '../lib/labels'
 import { AlgorithmTable } from '../components/AlgorithmTable'
 import { CodeView } from '../components/CodeView'
 import { Button, Empty, LoadError, PageHeader, Panel, Skeleton, Tag } from '../components/ui'
@@ -30,14 +30,13 @@ export default function ProblemDetail() {
   if (!state.data) return <div className="space-y-4"><Skeleton className="h-10 w-80" /><Skeleton className="h-40" /><Skeleton className="h-64" /></div>
 
   const { problem, algorithms, generators, experiments } = state.data
-  const weeks = weeksLabel(problem.tags)
   const canVisualize = problem.renderer !== 'none' && algorithms.some((a) => a.supports_visualization)
   const algNames = Object.fromEntries(algorithms.map((a) => [a.id, a.name]))
 
   return (
     <>
       <PageHeader
-        back={<BackLink to="/">Všetky úlohy</BackLink>}
+        back={<BackLink to="/problems">Všetky úlohy</BackLink>}
         title={problem.name}
         lead={problem.summary}
         actions={
@@ -56,7 +55,6 @@ export default function ProblemDetail() {
 
       <div className="mb-6 flex flex-wrap gap-1.5">
         <Tag>{CATEGORY[problem.category]}</Tag>
-        {weeks && <Tag>{weeks}</Tag>}
         {!problem.is_builtin && <Tag>vlastná úloha</Tag>}
       </div>
 

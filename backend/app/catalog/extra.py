@@ -1,7 +1,7 @@
-"""Úlohy mimo predmetu ÚSaA: vyhľadávanie, najkratšie cesty, kostra, vyhľadávanie vzorky, LCS.
+"""Vyhľadávanie, najkratšie cesty, minimálna kostra, vyhľadávanie vzorky a LCS.
 
-Dopĺňajú katalóg o klasické algoritmy z literatúry (Cormen a kol., Sedgewick a Wayne),
-na ktorých sa dobre ukazuje rozdiel medzi priemerným a najhorším prípadom.
+Klasické algoritmy z literatúry (Cormen a kol., Sedgewick a Wayne), na ktorých sa dobre
+ukazuje rozdiel medzi priemerným a najhorším prípadom.
 """
 
 from __future__ import annotations
@@ -65,7 +65,6 @@ SEARCH = {
     "renderer": "array",
     "input_description": "Objekt {\"array\": zoradené pole, \"queries\": hľadané hodnoty}.",
     "output_description": "Zoznam indexov, -1 pre hodnotu, ktorá v poli nie je.",
-    "tags": ["mimo-kurzu"],
     "checker": CHECK_SEARCH,
     "generators": [{
         "id": "gen_search", "name": "Zoradené pole a dopyty", "code": GEN_SEARCH,
@@ -79,7 +78,7 @@ SEARCH = {
     }],
     "algorithms": [
         {
-            "id": "alg_search_linear", "name": "Lineárne vyhľadávanie",
+            "id": "alg_search_linear", "name": "Linear search",
             "description": "Porovná hľadanú hodnotu postupne s každým prvkom poľa.",
             "paradigm": "iterative", "best": "O(1)", "avg": "O(n)", "worst": "O(n)", "space": "O(1)",
             "note": "na jeden dopyt", "param": "dĺžka poľa",
@@ -101,7 +100,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_search_binary", "name": "Binárne vyhľadávanie",
+            "id": "alg_search_binary", "name": "Binary search",
             "description": "Porovná hodnotu so stredom úseku a pokračuje v ľavej alebo pravej polovici.",
             "paradigm": "divide_and_conquer", "best": "O(1)", "avg": "O(log n)", "worst": "O(log n)",
             "space": "O(1)", "note": "na jeden dopyt", "param": "dĺžka poľa",
@@ -133,7 +132,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_search_interp", "name": "Interpolačné vyhľadávanie",
+            "id": "alg_search_interp", "name": "Interpolation search",
             "description": "Odhadne polohu hodnoty lineárnou interpoláciou medzi krajnými prvkami úseku.",
             "paradigm": "iterative", "best": "O(1)", "avg": "O(log log n)", "worst": "O(n)",
             "space": "O(1)", "note": "priemer platí pre rovnomerne rozložené hodnoty", "param": "dĺžka poľa",
@@ -220,12 +219,11 @@ SSSP = {
     "renderer": "graph",
     "input_description": WGRAPH_INPUT,
     "output_description": "Zoznam dist, kde dist[v] je dĺžka najkratšej cesty, -1 pre nedosiahnuteľný vrchol.",
-    "tags": ["mimo-kurzu"],
     "reference": "alg_dijkstra_heap",
     "generators": [_wgen("gen_sssp", [250, 500, 1000, 2000])],
     "algorithms": [
         {
-            "id": "alg_dijkstra_array", "name": "Dijkstra s poľom",
+            "id": "alg_dijkstra_array", "name": "Dijkstra (array)",
             "description": "Najbližší nespracovaný vrchol hľadá prechodom celého poľa vzdialeností.",
             "paradigm": "greedy", "best": "O(n^2)", "avg": "O(n^2)", "worst": "O(n^2)", "space": "O(n)",
             "note": "O(n² + m)", "param": "počet vrcholov",
@@ -257,7 +255,7 @@ def solve(g, tracker):
 ''',
         },
         {
-            "id": "alg_dijkstra_heap", "name": "Dijkstra s binárnou haldou",
+            "id": "alg_dijkstra_heap", "name": "Dijkstra (binary heap)",
             "description": "Kandidáti sú v halde podľa vzdialenosti. Zastarané záznamy sa pri výbere preskočia.",
             "paradigm": "greedy", "best": "O(n log n)", "avg": "O(n log n)", "worst": "other",
             "space": "O(n)", "note": "O((n + m) log n), v hustom grafe O(n² log n). Operácia s haldou sa počíta ako jedna, preto počet operácií ukáže O(n + m)", "param": "počet vrcholov",
@@ -319,7 +317,7 @@ def solve(g, tracker):
         },
     ],
     "experiments": [{
-        "id": "exp_sssp", "name": "Dijkstra s poľom a haldou, Bellman-Ford",
+        "id": "exp_sssp", "name": "Dijkstra (array, binary heap) a Bellman-Ford",
         "algorithms": ["alg_dijkstra_array", "alg_dijkstra_heap", "alg_bellman_ford"],
         "generator": "gen_sssp", "sizes": [250, 500, 1000, 2000], "repeats": 3,
         "variants": [
@@ -377,12 +375,11 @@ MST = {
         "od jedného vrchola o najlacnejšiu hranu von. S haldou sa hodí na riedke grafy, "
         "s maticou a poľom na husté grafy."
     ),
-    "category": "greedy",
+    "category": "graph",
     "input_type": "weighted_graph",
     "renderer": "graph",
     "input_description": WGRAPH_INPUT + " Pri nesúvislom grafe sa hľadá minimálny kostrový les.",
     "output_description": "Zoznam hrán [u, v, w] kostry.",
-    "tags": ["mimo-kurzu"],
     "reference": "alg_kruskal",
     "checker": CHECK_MST,
     "generators": [_wgen("gen_mst", [250, 500, 1000, 2000])],
@@ -426,7 +423,7 @@ def solve(g, tracker):
 ''',
         },
         {
-            "id": "alg_prim_heap", "name": "Prim s haldou",
+            "id": "alg_prim_heap", "name": "Prim (binary heap)",
             "description": "Halda drží hrany vedúce zo stromu von. Vyberie najlacnejšiu, ktorá vedie do nového vrchola.",
             "paradigm": "greedy", "best": "O(n log n)", "avg": "O(n log n)", "worst": "other",
             "space": "O(n)", "note": "O(m log n), v hustom grafe O(n² log n). Operácia s haldou sa počíta ako jedna, preto počet operácií ukáže O(m)", "param": "počet vrcholov",
@@ -463,7 +460,7 @@ def solve(g, tracker):
 ''',
         },
         {
-            "id": "alg_prim_matrix", "name": "Prim s maticou",
+            "id": "alg_prim_matrix", "name": "Prim (adjacency matrix)",
             "description": "Pre každý vrchol mimo stromu si pamätá najlacnejšiu hranu do stromu. Ďalší vrchol vyberá prechodom poľa.",
             "paradigm": "greedy", "best": "O(n^2)", "avg": "O(n^2)", "worst": "O(n^2)", "space": "O(n^2)",
             "note": "nezávisí od počtu hrán", "param": "počet vrcholov",
@@ -557,7 +554,6 @@ PATTERN = {
     "renderer": "string",
     "input_description": "Objekt {\"text\": text, \"pattern\": vzorka}.",
     "output_description": "Zoznam začiatočných pozícií všetkých výskytov vzorky.",
-    "tags": ["mimo-kurzu"],
     "reference": "alg_kmp",
     "generators": [{
         "id": "gen_pattern", "name": "Text a vzorka", "code": GEN_PATTERN,
@@ -568,7 +564,7 @@ PATTERN = {
     }],
     "algorithms": [
         {
-            "id": "alg_naive_match", "name": "Naivné vyhľadávanie",
+            "id": "alg_naive_match", "name": "Naive string matching",
             "description": "Pre každú pozíciu porovná vzorku s textom zľava doprava až po prvú nezhodu.",
             "paradigm": "brute_force", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)", "space": "O(1)",
             "note": "O(n · m), m je dĺžka vzorky", "param": "dĺžka textu",
@@ -733,7 +729,7 @@ LCS = {
     "name": "Najdlhšia spoločná podpostupnosť",
     "summary": "Zisti dĺžku najdlhšej postupnosti znakov, ktorá sa v rovnakom poradí nachádza v oboch reťazcoch.",
     "description": (
-        "Klasická úloha dynamického programovania (Cormen a kol., kapitola 15). Rekurzia bez "
+        "Klasická úloha pre dynamic programming (Cormen a kol., kapitola 15). Rekurzia bez "
         "pamäte rieši tie isté dvojice predpôn znova a znova. Tabuľka L[i][j] s dĺžkou LCS "
         "predpôn a[:i] a b[:j] sa vypĺňa po riadkoch v čase O(n · m)."
     ),
@@ -742,7 +738,6 @@ LCS = {
     "renderer": "grid",
     "input_description": "Objekt {\"a\": reťazec, \"b\": reťazec}.",
     "output_description": "Dĺžka najdlhšej spoločnej podpostupnosti.",
-    "tags": ["mimo-kurzu"],
     "reference": "alg_lcs_dp",
     "generators": [{
         "id": "gen_lcs", "name": "Dva reťazce", "code": GEN_LCS,
@@ -753,7 +748,7 @@ LCS = {
     }],
     "algorithms": [
         {
-            "id": "alg_lcs_naive", "name": "Rekurzia bez pamäte", "viz": False,
+            "id": "alg_lcs_naive", "name": "Naive recursion", "viz": False,
             "description": "Ak sa posledné znaky zhodujú, pridá 1 a skráti oba reťazce. Inak skúsi skrátiť jeden alebo druhý.",
             "paradigm": "recursive", "best": "O(n)", "avg": "other", "worst": "other", "space": "O(n)",
             "note": "najhoršie O(2^(n+m)), pri n = m rastie ako 4ⁿ", "param": "dĺžka reťazcov",
@@ -774,7 +769,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_lcs_memo", "name": "Rekurzia s memoizáciou",
+            "id": "alg_lcs_memo", "name": "Memoized recursion",
             "description": "Rovnaká rekurzia, výsledok pre každú dvojicu (i, j) sa vypočíta len raz.",
             "paradigm": "dynamic_programming", "best": "O(n)", "avg": "O(n^2)", "worst": "O(n^2)",
             "space": "O(n^2)", "note": "O(n · m)", "param": "dĺžka reťazcov", "properties": ["recursive"],
@@ -802,7 +797,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_lcs_dp", "name": "Tabuľka po riadkoch",
+            "id": "alg_lcs_dp", "name": "Bottom-up table",
             "description": "L[i][j] = L[i-1][j-1] + 1 pri zhode znakov, inak väčšia z hodnôt L[i-1][j] a L[i][j-1].",
             "paradigm": "dynamic_programming", "best": "O(n^2)", "avg": "O(n^2)", "worst": "O(n^2)",
             "space": "O(n^2)", "note": "O(n · m)", "param": "dĺžka reťazcov",

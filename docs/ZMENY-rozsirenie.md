@@ -113,38 +113,38 @@ Nezhody sú vysvetliteľné a sú didakticky užitočné:
 
 ## 7. Katalóg úloh
 
-Algoritmy z predmetu Údajové štruktúry a algoritmy (KPI FEI TUKE) a päť úloh nad jeho
-rámec.
+Klasické úlohy z údajových štruktúr a algoritmov a z literatúry (Cormen a kol., Sedgewick a Wayne).
+Názvy algoritmov sú anglické odborné názvy, popisy sú po slovensky.
 
-| Úloha | Cvičenie | Zobrazenie | Kontrola | Algoritmy |
-|---|---|---|---|---|
-| Maximum a minimum poľa | 1, 8 | pole | check | Naivný prechod, MAXMIN (rozdeľuj a panuj), Prechod po dvojiciach |
-| Súčet 1 + 2 + … + n | 2 | bez | check | Cyklus, Gaussov vzorec |
-| Faktoriál | 1, 2 | bez | check | Cyklus, Rekurzia |
-| Mocnina 2ⁿ | 1 | bez | check | Opakované násobenie, Rýchle umocňovanie, Bitový posun |
-| Fibonacciho čísla | 3 | pole | referencia | Rekurzia podľa definície, Rekurzia s memoizáciou, Tabuľka zdola nahor, Dve premenné, Rýchle zdvojovanie |
-| Kombinačné číslo | 3 | tabuľka | referencia | Rekurzia podľa Pascalovho vzťahu, Rekurzia s memoizáciou, Pascalov trojuholník v tabuľke, Multiplikatívny vzorec |
-| Násobenie reťazca matíc | 4 | tabuľka | referencia | Rekurzia cez všetky delenia, Rekurzia s memoizáciou, Tabuľka podľa dĺžky úseku |
-| Rozmieňanie mincí | 4 | pole | check | Pažravý algoritmus (zámerne nesprávny pre sadu z cvičenia), Dynamické programovanie |
-| Zoznam: operácie Cat a Cut | 3 | bez | referencia | Zoznam v poli, Spájaný zoznam s ukazovateľom na koniec |
-| Zásobník | 4 | bez | referencia | Zásobník v poli, Zásobník v spájanom zozname |
-| Front | 4 | bez | referencia | Pole s posúvaním prvkov, Kruhové pole, Spájaný zoznam |
-| Vytvorenie maximálnej haldy | 5 | pole | check | Postupné vkladanie, BuildHeap zdola |
-| Preorder prehľadávanie | 6 | strom | referencia | rekurzívne, so zásobníkom |
-| Inorder prehľadávanie | 6 | strom | referencia | rekurzívne, so zásobníkom |
-| Postorder prehľadávanie | 6 | strom | referencia | rekurzívne, s dvoma zásobníkmi |
-| Level-order prehľadávanie | 6 | strom | referencia | s frontom, bez frontu (levelorderNQ) |
-| Triedenie poľa čísel | 7, 8, 9 | pole | check | Bublinkové, bublinkové s ukončením, vkladaním, výberom, merge sort, heapsort, quicksort s posledným a s náhodným pivotom, radix sort s počítaním cifier a s desiatimi frontmi |
-| Triedenie reťazcov | 9 | bez | check | LSD radix sort, MSD radix sort, merge sort |
-| Prehľadanie grafu | 10 | graf | check | DFS rekurzívne, DFS so zásobníkom, BFS so zoznamom susedov, BFS s maticou susednosti |
-| Kostrový les grafu | 11 | graf | check | pomocou DFS, pomocou BFS |
-| Najkratšie cesty v neváženom grafe | 11 | graf | check | BFS, DFS (zámerne nesprávne) |
-| Operácie nad množinou | 5, 12 | strom | check | Neusporiadaný zoznam, BVS, AVL strom, 2-3 strom, hašovanie so zreťazením, otvorené adresovanie s lineárnym a kvadratickým skúšaním |
-| Vyhľadávanie v zoradenom poli | mimo | pole | check | Lineárne, binárne, interpolačné |
-| Najkratšie cesty vo váženom grafe | mimo | graf | referencia | Dijkstra s poľom, Dijkstra s haldou, Bellman-Ford |
-| Minimálna kostra grafu | mimo | graf | check | Kruskal, Prim s haldou, Prim s maticou |
-| Vyhľadávanie vzorky v texte | mimo | text | referencia | Naivné, KMP, Boyer-Moore-Horspool, Rabin-Karp |
-| Najdlhšia spoločná podpostupnosť | mimo | tabuľka | referencia | Rekurzia bez pamäte, s memoizáciou, tabuľka |
+| Úloha | Zobrazenie | Kontrola | Algoritmy |
+|---|---|---|---|
+| Maximum a minimum poľa | pole | check | Naive linear scan, MAXMIN (divide and conquer), Pairwise scan |
+| Súčet 1 + 2 + … + n | bez | check | Loop, Gauss formula |
+| Faktoriál | bez | check | Iterative, Recursive |
+| Mocnina 2ⁿ | bez | check | Repeated multiplication, Fast exponentiation, Bit shift |
+| Fibonacciho čísla | pole | referencia | Naive recursion, Memoized recursion, Bottom-up table, Two variables, Fast doubling |
+| Kombinačné číslo | tabuľka | referencia | Naive recursion (Pascal's rule), Memoized recursion, Pascal's triangle, Multiplicative formula |
+| Násobenie reťazca matíc | tabuľka | referencia | Naive recursion, Memoized recursion, Bottom-up dynamic programming |
+| Rozmieňanie mincí | pole | check | Greedy, Dynamic programming |
+| Zoznam: operácie Cat a Cut | bez | referencia | Array list, Linked list with tail pointer |
+| Zásobník | bez | referencia | Array stack, Linked list stack |
+| Front | bez | referencia | Array with shifting, Circular buffer, Linked list queue |
+| Vytvorenie maximálnej haldy | pole | check | Repeated insertion, Bottom-up BuildHeap |
+| Preorder prehľadávanie | strom | referencia | Recursive preorder, Iterative preorder (stack) |
+| Inorder prehľadávanie | strom | referencia | Recursive inorder, Iterative inorder (stack) |
+| Postorder prehľadávanie | strom | referencia | Recursive postorder, Iterative postorder (two stacks) |
+| Level-order prehľadávanie | strom | referencia | Level-order (queue), Level-order without queue |
+| Triedenie poľa čísel | pole | check | Bubble sort, Bubble sort (early exit), Insertion sort, Selection sort, Merge sort, Heapsort, Quicksort (last element pivot), Quicksort (random pivot), Radix sort (LSD, counting), Radix sort (LSD, ten queues) |
+| Triedenie reťazcov | bez | check | LSD radix sort, MSD radix sort, Merge sort |
+| Prehľadanie grafu | graf | check | DFS (recursive), DFS (stack), BFS (adjacency list), BFS (adjacency matrix) |
+| Kostrový les grafu | graf | check | DFS spanning forest, BFS spanning forest |
+| Najkratšie cesty v neváženom grafe | graf | check | BFS (layers), DFS depth (incorrect) |
+| Operácie nad množinou | strom | check | Unsorted list, Binary search tree, AVL tree, 2-3 tree, Hashing with chaining (m = 1009), Open addressing, linear probing, Open addressing, quadratic probing |
+| Vyhľadávanie v zoradenom poli | pole | check | Linear search, Binary search, Interpolation search |
+| Najkratšie cesty vo váženom grafe | graf | referencia | Dijkstra (array), Dijkstra (binary heap), Bellman-Ford |
+| Minimálna kostra grafu | graf | check | Kruskal, Prim (binary heap), Prim (adjacency matrix) |
+| Vyhľadávanie vzorky v texte | text | referencia | Naive string matching, Knuth-Morris-Pratt, Boyer-Moore-Horspool, Rabin-Karp |
+| Najdlhšia spoločná podpostupnosť | tabuľka | referencia | Naive recursion, Memoized recursion, Bottom-up table |
 
 Overenie katalógu: `backend/catalog_test.py` spustí každý algoritmus na každom druhu
 vstupu s tromi seedmi, skontroluje správnosť (zámerne nesprávne algoritmy musia aspoň raz
@@ -159,8 +159,9 @@ Rozhranie je navrhnuté pre študenta druhého ročníka. Zásady:
 - Farba patrí dátam a stavom. Rovnaké farby rolí vo všetkých zobrazeniach: porovnanie
   (jantárová), výmena alebo zápis (oranžovočervená), pivot (purpurová), práve spracúvaný
   prvok (modrá), hotové (zelená).
-- Domovská stránka je katalóg úloh zoradený podľa tém predmetu a trojkrokový návod:
-  vyber úlohu, spusti vizualizáciu, porovnaj v experimente.
+- Úvodná stránka predstaví funkcie na skutočných ukážkach (živá vizualizácia, graf z experimentu,
+  odhad zložitosti, ukážka kódu). Katalóg úloh je zoradený podľa tém a má trojkrokový návod.
+- Katalóg algoritmov je mriežka dlaždíc zoskupená podľa tém s filtrami.
 - Rebrík zložitosti: triedy od O(1) po exponenciálne ako schody rastúcej výšky. Rozsah
   najlepší až najhorší prípad je podfarbený, deklarovaná trieda má rámik, odhad z merania
   je plný schod. Zhodu je vidieť bez čítania textu.

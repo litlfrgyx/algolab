@@ -2,7 +2,7 @@
 
 /*
   AlgoLab, vizuálny systém.
-  Svet: laboratórny zošit z cvičení. Papier, grafit, modrý atrament.
+  Svet: laboratórny zošit. Papier, grafit, modrý atrament.
   Farba patrí dátam a stavom (porovnanie, výmena, hotovo), nie rámom.
 */
 
@@ -17,10 +17,13 @@
   --ink: #17201c;
   --ink-2: #46514c;
   --ink-3: #626d68;
-  --accent: #1f5f8b;
-  --accent-hover: #194f75;
+  --accent: #1e5aa8;
+  --accent-hover: #184a8b;
   --accent-ink: #ffffff;
-  --accent-soft: #e2ecf4;
+  --accent-soft: #e2ebf7;
+  --logo-ink: #13294b;
+  --logo-accent: #2d7be0;
+  --logo-bg: var(--ground);
 
   /* roly vo vizualizácii, rovnaké vo všetkých zobrazeniach */
   --role-compare: #b86e00;
@@ -29,8 +32,8 @@
   --role-swap-soft: #fbe0d4;
   --role-pivot: #9b3a86;
   --role-pivot-soft: #f4e0ef;
-  --role-active: #1f5f8b;
-  --role-active-soft: #dce9f4;
+  --role-active: #1e5aa8;
+  --role-active-soft: #dce7f6;
   --role-done: #2c7a4b;
   --role-done-soft: #dcefe2;
   --role-visited: #8fa69a;
@@ -73,18 +76,20 @@
     --ink: #e7ece9;
     --ink-2: #b6c0bb;
     --ink-3: #909b96;
-    --accent: #6ba7d8;
-    --accent-hover: #86b8e0;
-    --accent-ink: #0e1a24;
-    --accent-soft: #1d2d3a;
+    --accent: #6aaee8;
+    --accent-hover: #88c0ee;
+    --accent-ink: #0c1826;
+    --accent-soft: #1b2c3e;
+    --logo-ink: #e4e9f1;
+    --logo-accent: #4fc3f0;
     --role-compare: #e0a33a;
     --role-compare-soft: #3a2d15;
     --role-swap: #ec7a4f;
     --role-swap-soft: #3d2219;
     --role-pivot: #d27bc0;
     --role-pivot-soft: #36203a;
-    --role-active: #6ba7d8;
-    --role-active-soft: #1c2e3c;
+    --role-active: #6aaee8;
+    --role-active-soft: #1b2c3e;
     --role-done: #5dbb84;
     --role-done-soft: #1a3324;
     --role-visited: #6f8479;

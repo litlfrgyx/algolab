@@ -34,7 +34,7 @@ const TRACKER: [string, string, string][] = [
   ['Graf', 'tracker.graph(n, hrany), tracker.visit(v), tracker.edge(u, v, "tree")', 'Návšteva vrchola a preskúmanie hrany. Rola "tree" hranu označí natrvalo.'],
   ['Graf', 'tracker.relax(u, v, nová_vzdialenosť), tracker.frontier(front, "front")', 'Uvoľnenie hrany a obsah frontu alebo zásobníka pod grafom.'],
   ['Strom', 'tracker.tree(koreň, label="..."), tracker.focus(kľúč), tracker.mark_node(kľúč)', 'Snímok stromu z uzlov s atribútmi key, left, right alebo keys, children.'],
-  ['Strom', 'tracker.tree_arrays(values, left, right, root)', 'Strom v reprezentácii z cvičenia 6, kde 0 znamená prázdny podstrom.'],
+  ['Strom', 'tracker.tree_arrays(values, left, right, root)', 'Strom uložený v troch poliach, kde 0 znamená prázdny podstrom.'],
   ['Text', 'tracker.string(text, vzorka), tracker.shift(posun), tracker.match(i, j), tracker.mismatch(i, j), tracker.found(i)', 'Vyhľadávanie vzorky v texte.'],
 ]
 
@@ -44,7 +44,7 @@ export default function Guide() {
       <PageHeader title="Príručka" lead="Ako napísať vlastný algoritmus, generátor vstupov a kontrolu správnosti. Kód beží v Pythone v izolovanom procese s časovým limitom." />
       <div className="space-y-6">
         <Panel title="Algoritmus">
-          <div className="grid gap-4 px-4 pb-4 pt-1 lg:grid-cols-2">
+          <div className="grid gap-4 px-4 pb-4 pt-1 lg:grid-cols-2 [&>*]:min-w-0">
             <div className="prose-text space-y-3 text-sm">
               <p>Algoritmus je funkcia <code>solve(data)</code> alebo <code>solve(data, tracker)</code>. Dostane vstup úlohy a vráti výsledok.</p>
               <p>Druhý parameter <code>tracker</code> zaznamenáva kroky. Algoritmus bez neho sa dá merať, ale nie vizualizovať.</p>
@@ -77,7 +77,7 @@ export default function Guide() {
           </div>
           <p className="px-4 py-3 text-[13px] text-ink-3">Každá metóda má voliteľný parameter <code>label</code> s textom, ktorý sa zobrazí pri kroku.</p>
         </Panel>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
           <Panel title="Generátor vstupov">
             <div className="space-y-3 px-4 pb-4 pt-1">
               <p className="prose-text text-sm">Funkcia <code>generate(n, **params)</code> vráti vstup veľkosti n. Parameter <code>seed</code> zaručí, že rovnaký seed dá rovnaký vstup, takže experiment sa dá zopakovať.</p>

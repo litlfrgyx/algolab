@@ -3,12 +3,12 @@ import type { ComplexityClass, Paradigm, ProblemCategory } from '../types'
 export const CATEGORY: Record<ProblemCategory, string> = {
   sorting: 'Triedenie',
   searching: 'Vyhľadávanie',
-  divide_and_conquer: 'Rozdeľuj a panuj',
+  divide_and_conquer: 'Divide and conquer',
   string: 'Reťazce',
-  dynamic_programming: 'Dynamické programovanie',
+  dynamic_programming: 'Dynamic programming',
   matrix: 'Matice',
   backtracking: 'Backtracking',
-  greedy: 'Pažravé algoritmy',
+  greedy: 'Greedy',
   graph: 'Grafy',
   recursive: 'Rekurzia',
   data_structures: 'Údajové štruktúry',
@@ -17,25 +17,26 @@ export const CATEGORY: Record<ProblemCategory, string> = {
   numeric: 'Číselné úlohy',
 }
 
+/** Prístupy sa uvádzajú anglickými odbornými názvami. */
 export const PARADIGM: Record<Paradigm, string> = {
-  iterative: 'iteratívny',
-  recursive: 'rekurzívny',
-  divide_and_conquer: 'rozdeľuj a panuj',
-  dynamic_programming: 'dynamické programovanie',
-  greedy: 'pažravý',
-  brute_force: 'hrubá sila',
+  iterative: 'iterative',
+  recursive: 'recursive',
+  divide_and_conquer: 'divide and conquer',
+  dynamic_programming: 'dynamic programming',
+  greedy: 'greedy',
+  brute_force: 'brute force',
   backtracking: 'backtracking',
-  data_structure: 'údajová štruktúra',
+  data_structure: 'data structure',
 }
 
 export const PROPERTY: Record<string, string> = {
-  stable: 'stabilný',
-  in_place: 'na mieste',
-  adaptive: 'adaptívny',
-  recursive: 'rekurzia',
-  randomized: 'náhodnosť',
-  non_comparison: 'bez porovnávania',
-  hashing: 'hašovanie',
+  stable: 'stable',
+  in_place: 'in-place',
+  adaptive: 'adaptive',
+  recursive: 'recursive',
+  randomized: 'randomized',
+  non_comparison: 'non-comparison',
+  hashing: 'hashing',
   intentionally_incorrect: 'zámerne nesprávny',
 }
 
@@ -64,31 +65,24 @@ export const CASE_LABEL = { best: 'najlepší prípad', avg: 'priemerný prípad
 
 export const CONFIDENCE_LABEL = { high: 'vysoká', medium: 'stredná', low: 'nízka', none: '–' } as const
 
-/** Témy katalógu v poradí predmetu ÚSaA. Úloha patrí do prvej témy, ktorej podmienku spĺňa. */
-export const TOPICS: { id: string; title: string; match: (tags: string[], category: string) => boolean }[] = [
-  { id: 'mimo', title: 'Nad rámec predmetu', match: (t) => t.includes('mimo-kurzu') },
-  { id: 'zaklady', title: 'Základy a rekurzia', match: (_t, c) => ['divide_and_conquer', 'numeric', 'recursive'].includes(c) },
-  { id: 'dp', title: 'Dynamické programovanie', match: (_t, c) => c === 'dynamic_programming' },
-  { id: 'struktury', title: 'Zoznam, zásobník, front a halda', match: (_t, c) => c === 'data_structures' },
-  { id: 'stromy', title: 'Prehľadávanie stromu', match: (_t, c) => c === 'traversal' },
-  { id: 'triedenie', title: 'Triedenie', match: (_t, c) => c === 'sorting' },
-  { id: 'grafy', title: 'Grafy', match: (_t, c) => c === 'graph' },
-  { id: 'mnoziny', title: 'Množiny a hašovanie', match: (_t, c) => c === 'set' },
+/** Témy katalógu. Úloha patrí do témy podľa svojej kategórie. */
+export const TOPICS: { id: string; title: string; match: (category: string) => boolean }[] = [
+  { id: 'zaklady', title: 'Základy a rekurzia', match: (c) => ['divide_and_conquer', 'numeric', 'recursive'].includes(c) },
+  { id: 'dp', title: 'Dynamic programming', match: (c) => c === 'dynamic_programming' },
+  { id: 'struktury', title: 'Zoznam, zásobník, front a halda', match: (c) => c === 'data_structures' },
+  { id: 'stromy', title: 'Prehľadávanie stromu', match: (c) => c === 'traversal' },
+  { id: 'triedenie', title: 'Triedenie', match: (c) => c === 'sorting' },
+  { id: 'vyhladavanie', title: 'Vyhľadávanie', match: (c) => c === 'searching' },
+  { id: 'grafy', title: 'Grafy', match: (c) => c === 'graph' || c === 'greedy' },
+  { id: 'mnoziny', title: 'Množiny a hašovanie', match: (c) => c === 'set' },
+  { id: 'retazce', title: 'Reťazce a text', match: (c) => c === 'string' },
   { id: 'vlastne', title: 'Ďalšie úlohy', match: () => true },
 ]
 
-/** Poradie zobrazenia tém (mimo kurzu je prvé v hľadaní, ale posledné na stránke). */
-export const TOPIC_ORDER = ['zaklady', 'dp', 'struktury', 'stromy', 'triedenie', 'grafy', 'mnoziny', 'mimo', 'vlastne']
+export const TOPIC_ORDER = TOPICS.map((t) => t.id)
 
-/** Cvičenia predmetu, z ktorých úloha pochádza: ['cv3', 'cv4'] → "cvičenia 3, 4". */
-export function weeksLabel(tags: string[]): string | null {
-  const weeks = tags.filter((t) => /^cv\d+$/.test(t)).map((t) => t.slice(2))
-  if (!weeks.length) return tags.includes('mimo-kurzu') ? 'mimo predmetu' : null
-  return weeks.length === 1 ? `cvičenie ${weeks[0]}` : `cvičenia ${weeks.join(', ')}`
-}
-
-export function topicOf(tags: string[], category: string): string {
-  return (TOPICS.find((t) => t.match(tags, category)) ?? TOPICS[TOPICS.length - 1]).id
+export function topicOf(category: string): string {
+  return (TOPICS.find((t) => t.match(category)) ?? TOPICS[TOPICS.length - 1]).id
 }
 
 export function formatNumber(x: number | null | undefined, digits = 0): string {

@@ -7,7 +7,7 @@ Pokyny pre Claude Code pri práci v tomto repozitári.
 **AlgoLab**, webová aplikácia k diplomovej práci „Systém pre podporu návrhu a analýzy
 algoritmov“ (FEI TUKE, KPI). Študent si vyberie úlohu, pozrie vizualizáciu algoritmu krok
 po kroku, porovná algoritmy v experimente na vstupoch rastúcej veľkosti a dostane odhad
-triedy zložitosti z merania. Cieľová skupina: študenti predmetu Údajové štruktúry a algoritmy.
+triedy zložitosti z merania. Cieľová skupina: študenti informatiky, ktorí sa učia algoritmy.
 
 Kontrakt systému: [CONTRACT.md](CONTRACT.md). Zmeny rozšírenia pre text práce:
 [docs/ZMENY-rozsirenie.md](docs/ZMENY-rozsirenie.md). Spustenie: [docs/RUN.md](docs/RUN.md).
@@ -59,3 +59,6 @@ npm run lint
 - Po zmene katalógu spusti `python catalog_test.py <id_úlohy>`.
 - Po zmene modelu zvýš `SCHEMA_VERSION` v `backend/app/models.py`.
 - Skilly na dizajn rozhrania sú v `.claude/skills` (impeccable, taste-skill, interface-design, playwright-cli).
+- Aplikácia sa nesmie odvolávať na konkrétny predmet (žiadne cvičenia ani skratky predmetov).
+- Názvy algoritmov a techník (divide and conquer, greedy, dynamic programming) sú anglické, popisy po slovensky.
+- Logo je SVG v `frontend/src/components/Logo.tsx` (farby `--logo-ink`, `--logo-accent`).

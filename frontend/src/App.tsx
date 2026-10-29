@@ -2,7 +2,8 @@ import { lazy } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import { EditAuthProvider } from './lib/auth'
-import Problems from './pages/Problems'
+import Landing from './pages/Landing'
+const Problems = lazy(() => import('./pages/Problems'))
 const ProblemDetail = lazy(() => import('./pages/ProblemDetail'))
 const Algorithms = lazy(() => import('./pages/Algorithms'))
 const AlgorithmDetail = lazy(() => import('./pages/AlgorithmDetail'))
@@ -19,9 +20,9 @@ export default function App() {
     <EditAuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Problems />} />
-            <Route path="problems" element={<Navigate to="/" replace />} />
+          <Route path="/" element={<Landing />} />
+          <Route element={<Layout />}>
+            <Route path="problems" element={<Problems />} />
             <Route path="problems/:id" element={<ProblemDetail />} />
             <Route path="problems/:id/new" element={<NewAlgorithm />} />
             <Route path="algorithms" element={<Algorithms />} />

@@ -52,7 +52,7 @@ export default function Experiments() {
     const order = Object.fromEntries((state.data?.problems ?? []).map((p, i) => [p.id, i]))
     const topicRank = (e: Experiment) => {
       const p = problems[e.problem_id]
-      return p ? TOPIC_ORDER.indexOf(topicOf(p.tags, p.category)) : 99
+      return p ? TOPIC_ORDER.indexOf(topicOf(p.category)) : 99
     }
     const all = state.data?.experiments ?? []
     const builtin = all.filter((e) => e.is_builtin)

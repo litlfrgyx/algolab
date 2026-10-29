@@ -1,4 +1,4 @@
-"""Základné úlohy z cvičení 1, 2 a 8 ÚSaA: maximum a minimum, súčet, faktoriál, mocnina."""
+"""Základné úlohy: maximum a minimum, súčet, faktoriál, mocnina."""
 
 from __future__ import annotations
 
@@ -9,16 +9,15 @@ MAXMIN = {
     "name": "Maximum a minimum poľa",
     "summary": "Nájdi najmenší a najväčší prvok poľa s čo najmenej porovnaniami.",
     "description": (
-        "Úloha z cvičení 1 a 8. Všetky algoritmy majú lineárnu zložitosť, líšia sa však "
+        "Všetky algoritmy majú lineárnu zložitosť, líšia sa však "
         "konštantou, teda počtom porovnaní. Naivný prechod potrebuje 2n − 2 porovnaní, "
-        "MAXMIN metódou rozdeľuj a panuj 3n/2 − 2. Rozdiel ukáže počítadlo operácií."
+        "MAXMIN metódou divide and conquer 3n/2 − 2. Rozdiel ukáže počítadlo operácií."
     ),
     "category": "divide_and_conquer",
     "input_type": "array",
     "renderer": "array",
     "input_description": "Pole celých čísel, aspoň jeden prvok.",
     "output_description": "Dvojica [minimum, maximum].",
-    "tags": ["usaa", "cv1", "cv8"],
     "checker": '''
 def check(input, output, expected=None):
     want = [min(input), max(input)]
@@ -34,7 +33,7 @@ def check(input, output, expected=None):
     }],
     "algorithms": [
         {
-            "id": "alg_maxmin_naive", "name": "Naivný prechod",
+            "id": "alg_maxmin_naive", "name": "Naive linear scan",
             "description": "Každý prvok sa porovná s doterajším maximom aj minimom.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(1)",
             "note": "presne 2n − 2 porovnaní", "param": "počet prvkov",
@@ -56,7 +55,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_maxmin_dc", "name": "MAXMIN (rozdeľuj a panuj)",
+            "id": "alg_maxmin_dc", "name": "MAXMIN (divide and conquer)",
             "description": "Pole sa rozdelí na polovice, v každej sa rekurzívne nájde minimum a maximum a výsledky sa spoja dvoma porovnaniami.",
             "paradigm": "divide_and_conquer", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(log n)",
             "note": "3n/2 − 2 porovnaní pre n mocninu dvoch", "param": "počet prvkov", "properties": ["recursive"],
@@ -90,7 +89,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_maxmin_pairs", "name": "Prechod po dvojiciach",
+            "id": "alg_maxmin_pairs", "name": "Pairwise scan",
             "description": "Prvky sa spracúvajú po dvojiciach: najprv sa porovnajú navzájom, menší sa porovná s minimom a väčší s maximom.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(1)",
             "note": "približne 3n/2 porovnaní", "param": "počet prvkov",
@@ -132,7 +131,7 @@ SUM = {
     "name": "Súčet 1 + 2 + … + n",
     "summary": "Sčítaj čísla od 1 po n. Cyklom, alebo jediným vzorcom?",
     "description": (
-        "Úloha z cvičenia 2, kde sa na nej vysvetľuje časová zložitosť RAM programu. "
+        ""
         "Cyklus vykoná n sčítaní, Gaussov vzorec n(n + 1)/2 len konštantný počet operácií."
     ),
     "category": "numeric",
@@ -140,7 +139,6 @@ SUM = {
     "renderer": "none",
     "input_description": "Celé číslo n ≥ 1.",
     "output_description": "Súčet 1 + 2 + … + n.",
-    "tags": ["usaa", "cv2"],
     "checker": '''
 def check(input, output, expected=None):
     want = input * (input + 1) // 2
@@ -153,7 +151,7 @@ def check(input, output, expected=None):
     }],
     "algorithms": [
         {
-            "id": "alg_sum_loop", "name": "Cyklus", "viz": False,
+            "id": "alg_sum_loop", "name": "Loop", "viz": False,
             "description": "Postupne pripočíta každé číslo od 1 po n.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(1)",
             "param": "hodnota n",
@@ -167,7 +165,7 @@ def solve(n, tracker):
 ''',
         },
         {
-            "id": "alg_sum_formula", "name": "Gaussov vzorec", "viz": False,
+            "id": "alg_sum_formula", "name": "Gauss formula", "viz": False,
             "description": "Výsledok dá priamo vzorec n(n + 1)/2.",
             "paradigm": "iterative", "best": "O(1)", "avg": "O(1)", "worst": "O(1)", "space": "O(1)",
             "param": "hodnota n",
@@ -191,7 +189,7 @@ FACTORIAL = {
     "name": "Faktoriál",
     "summary": "Vypočítaj n! = 1 · 2 · … · n cyklom alebo rekurziou.",
     "description": (
-        "Úloha z cvičení 1 a 2. Oba spôsoby vykonajú n násobení, zložitosť je teda lineárna "
+        "Oba spôsoby vykonajú n násobení, zložitosť je teda lineárna "
         "pri jednotkovom kritériu. Pri logaritmickom kritériu rastie čas rýchlejšie, lebo "
         "čísla majú stále viac číslic. Rozdiel je dobre vidieť v grafe času oproti grafu operácií."
     ),
@@ -200,7 +198,6 @@ FACTORIAL = {
     "renderer": "none",
     "input_description": "Celé číslo n ≥ 0 (najviac asi 900 kvôli hĺbke rekurzie).",
     "output_description": "Hodnota n!.",
-    "tags": ["usaa", "cv1", "cv2"],
     "checker": '''
 import math
 
@@ -214,7 +211,7 @@ def check(input, output, expected=None):
     }],
     "algorithms": [
         {
-            "id": "alg_fact_iter", "name": "Cyklus", "viz": False,
+            "id": "alg_fact_iter", "name": "Iterative", "viz": False,
             "description": "Postupne násobí čísla 2, 3, …, n.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(1)",
             "note": "n násobení (jednotkové kritérium)", "param": "hodnota n",
@@ -228,7 +225,7 @@ def solve(n, tracker):
 ''',
         },
         {
-            "id": "alg_fact_rec", "name": "Rekurzia", "viz": False,
+            "id": "alg_fact_rec", "name": "Recursive", "viz": False,
             "description": "n! = n · (n − 1)!, pričom 0! = 1.",
             "paradigm": "recursive", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "note": "n násobení, hĺbka rekurzie n", "param": "hodnota n", "properties": ["recursive"],
@@ -257,7 +254,7 @@ POWER2 = {
     "name": "Mocnina 2ⁿ",
     "summary": "Vypočítaj 2ⁿ opakovaným násobením, rýchlym umocňovaním alebo bitovým posunom.",
     "description": (
-        "Úloha z cvičenia 1. Opakované násobenie potrebuje n násobení, rýchle umocňovanie "
+        "Opakované násobenie potrebuje n násobení, rýchle umocňovanie "
         "len približne 2 log₂ n, pretože číslo opakovane umocňuje na druhú. Bitový posun je "
         "jedna operácia jazyka."
     ),
@@ -266,7 +263,6 @@ POWER2 = {
     "renderer": "none",
     "input_description": "Celé číslo n ≥ 0.",
     "output_description": "Hodnota 2ⁿ.",
-    "tags": ["usaa", "cv1"],
     "checker": '''
 def check(input, output, expected=None):
     return output == 2 ** input, "Výsledok sa nezhoduje s 2^n"
@@ -278,7 +274,7 @@ def check(input, output, expected=None):
     }],
     "algorithms": [
         {
-            "id": "alg_pow_repeat", "name": "Opakované násobenie", "viz": False,
+            "id": "alg_pow_repeat", "name": "Repeated multiplication", "viz": False,
             "description": "Začne s hodnotou 1 a n-krát ju vynásobí dvoma.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(1)",
             "note": "n násobení", "param": "hodnota n",
@@ -292,7 +288,7 @@ def solve(n, tracker):
 ''',
         },
         {
-            "id": "alg_pow_fast", "name": "Rýchle umocňovanie", "viz": False,
+            "id": "alg_pow_fast", "name": "Fast exponentiation", "viz": False,
             "description": "Používa 2^(2k) = (2^k)² a 2^(2k+1) = 2 · (2^k)², preto stačí logaritmický počet násobení.",
             "paradigm": "divide_and_conquer", "best": "O(log n)", "avg": "O(log n)", "worst": "O(log n)", "space": "O(1)",
             "note": "približne 2 log₂ n násobení", "param": "hodnota n",
@@ -311,7 +307,7 @@ def solve(n, tracker):
 ''',
         },
         {
-            "id": "alg_pow_shift", "name": "Bitový posun", "viz": False,
+            "id": "alg_pow_shift", "name": "Bit shift", "viz": False,
             "description": "Číslo 1 posunie o n bitov doľava.",
             "paradigm": "iterative", "best": "O(1)", "avg": "O(1)", "worst": "O(1)", "space": "O(1)",
             "note": "jedna operácia jazyka, interne úmerná počtu bitov", "param": "hodnota n",

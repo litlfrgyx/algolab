@@ -1,4 +1,4 @@
-"""Prehľadávanie grafu z cvičení 10 a 11 ÚSaA."""
+"""Prehľadávanie grafu, kostrový les a najkratšie cesty v neváženom grafe."""
 
 from __future__ import annotations
 
@@ -71,7 +71,7 @@ TRAVERSAL = {
     "name": "Prehľadanie grafu",
     "summary": "Navštív všetky vrcholy dosiahnuteľné zo štartového vrchola.",
     "description": (
-        "Úloha z cvičenia 10. Prehľadávanie do hĺbky (DFS) ide čo najďalej po jednej ceste, "
+        "Prehľadávanie do hĺbky (DFS) ide čo najďalej po jednej ceste, "
         "prehľadávanie do šírky (BFS) spracúva vrcholy podľa vzdialenosti od štartu. Pri "
         "zozname susedov stojí každé z nich O(n + m). Matica susednosti vyžaduje O(n²) "
         "bez ohľadu na počet hrán, čo je vidieť hlavne na riedkych grafoch."
@@ -81,12 +81,11 @@ TRAVERSAL = {
     "renderer": "graph",
     "input_description": GRAPH_INPUT,
     "output_description": "Zoznam vrcholov v poradí, v akom ich algoritmus navštívil.",
-    "tags": ["usaa", "cv10"],
     "checker": CHECK_TRAVERSAL,
     "generators": [_gen("gen_graph_trav", [250, 500, 1000, 2000, 4000])],
     "algorithms": [
         {
-            "id": "alg_dfs_rec", "name": "DFS rekurzívne",
+            "id": "alg_dfs_rec", "name": "DFS (recursive)",
             "description": "Navštívi vrchol a rekurzívne pokračuje do každého nenavštíveného suseda.",
             "paradigm": "recursive", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n)", "note": "O(n + m), m je počet hrán. V riedkom grafe m ≈ 3n, v hustom m rastie ako n²", "param": "počet vrcholov",
@@ -114,7 +113,7 @@ def solve(g, tracker):
 ''',
         },
         {
-            "id": "alg_dfs_stack", "name": "DFS so zásobníkom",
+            "id": "alg_dfs_stack", "name": "DFS (stack)",
             "description": "Vlastný zásobník nahrádza rekurziu. Vrchol sa označí ako navštívený až pri výbere zo zásobníka.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n^2)", "note": "O(n + m), zásobník môže obsahovať vrchol viackrát", "param": "počet vrcholov",
@@ -142,7 +141,7 @@ def solve(g, tracker):
 ''',
         },
         {
-            "id": "alg_bfs", "name": "BFS so zoznamom susedov",
+            "id": "alg_bfs", "name": "BFS (adjacency list)",
             "description": "Front drží objavené vrcholy. Vrcholy sa spracúvajú v poradí, v akom boli objavené.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n)", "note": "O(n + m), m je počet hrán. V riedkom grafe m ≈ 3n, v hustom m rastie ako n²", "param": "počet vrcholov",
@@ -174,7 +173,7 @@ def solve(g, tracker):
 ''',
         },
         {
-            "id": "alg_bfs_matrix", "name": "BFS s maticou susednosti",
+            "id": "alg_bfs_matrix", "name": "BFS (adjacency matrix)",
             "description": "Rovnaký postup ako BFS, ale susedov hľadá prechodom celého riadka matice.",
             "paradigm": "iterative", "best": "O(n^2)", "avg": "O(n^2)", "worst": "O(n^2)",
             "space": "O(n^2)", "note": "nezávisí od počtu hrán", "param": "počet vrcholov",
@@ -257,7 +256,7 @@ FOREST = {
     "name": "Kostrový les grafu",
     "summary": "Vyber hrany, ktoré spoja každý komponent grafu a nevytvoria cyklus.",
     "description": (
-        "Úloha z cvičenia 11. Hrany, po ktorých prehľadávanie objaví nový vrchol, tvoria "
+        "Hrany, po ktorých prehľadávanie objaví nový vrchol, tvoria "
         "kostru komponentu. Ak sa prehľadávanie spustí z každého ešte nenavštíveného vrchola, "
         "vznikne kostrový les celého grafu. DFS a BFS dajú rôzne kostry, obe sú správne."
     ),
@@ -266,12 +265,11 @@ FOREST = {
     "renderer": "graph",
     "input_description": GRAPH_INPUT + " Vrchol start sa tu nepoužíva, les pokrýva celý graf.",
     "output_description": "Zoznam hrán [u, v] kostrového lesa.",
-    "tags": ["usaa", "cv11"],
     "checker": CHECK_FOREST,
     "generators": [_gen("gen_graph_forest", [250, 500, 1000, 2000, 4000], "disconnected")],
     "algorithms": [
         {
-            "id": "alg_forest_dfs", "name": "Kostrový les pomocou DFS",
+            "id": "alg_forest_dfs", "name": "DFS spanning forest",
             "description": "Z každého nenavštíveného vrchola spustí DFS so zásobníkom a uloží hrany, po ktorých objavil nový vrchol.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n^2)", "note": "O(n + m)", "param": "počet vrcholov",
@@ -301,7 +299,7 @@ def solve(g, tracker):
 ''',
         },
         {
-            "id": "alg_forest_bfs", "name": "Kostrový les pomocou BFS",
+            "id": "alg_forest_bfs", "name": "BFS spanning forest",
             "description": "Z každého nenavštíveného vrchola spustí BFS. Hrana, po ktorej sa vrchol objaví, patrí do lesa.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n)", "note": "O(n + m)", "param": "počet vrcholov",
@@ -344,7 +342,7 @@ SHORTEST = {
     "name": "Najkratšie cesty v neváženom grafe",
     "summary": "Zisti počet hrán na najkratšej ceste zo štartu do každého vrchola.",
     "description": (
-        "Úloha z cvičenia 11. BFS spracúva vrcholy po vrstvách, preto prvé objavenie vrchola "
+        "BFS spracúva vrcholy po vrstvách, preto prvé objavenie vrchola "
         "dá najkratšiu vzdialenosť. DFS je tu zámerne zaradené ako nesprávne riešenie: hĺbka "
         "vrchola v strome DFS nemusí byť najkratšia vzdialenosť. Kontrola správnosti to ukáže."
     ),
@@ -353,7 +351,6 @@ SHORTEST = {
     "renderer": "graph",
     "input_description": GRAPH_INPUT,
     "output_description": "Zoznam dist, kde dist[v] je počet hrán najkratšej cesty, -1 pre nedosiahnuteľný vrchol.",
-    "tags": ["usaa", "cv11"],
     "reference": "alg_sp_bfs",
     "checker": '''
 def check(input, output, expected=None):
@@ -368,7 +365,7 @@ def check(input, output, expected=None):
     "generators": [_gen("gen_graph_sp", [250, 500, 1000, 2000, 4000])],
     "algorithms": [
         {
-            "id": "alg_sp_bfs", "name": "BFS (vzdialenosti po vrstvách)",
+            "id": "alg_sp_bfs", "name": "BFS (layers)",
             "description": "Vzdialenosť suseda je o jedna väčšia ako vzdialenosť vrchola, z ktorého bol objavený.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n)", "note": "O(n + m)", "param": "počet vrcholov",
@@ -398,7 +395,7 @@ def solve(g, tracker):
 ''',
         },
         {
-            "id": "alg_sp_dfs_wrong", "name": "DFS (zámerne nesprávne)",
+            "id": "alg_sp_dfs_wrong", "name": "DFS depth (incorrect)",
             "description": "Vzdialenosť počíta ako hĺbku v strome DFS. Na grafe s cyklami dáva často dlhšie cesty.",
             "paradigm": "recursive", "best": "O(n)", "avg": "O(n)", "worst": "O(n^2)",
             "space": "O(n)", "note": "O(n + m)", "param": "počet vrcholov",

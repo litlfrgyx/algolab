@@ -1,4 +1,4 @@
-"""Triedenie z cvičení 7, 8 a 9 ÚSaA."""
+"""Triedenie čísel a reťazcov."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ SORTING = {
     "name": "Triedenie poľa čísel",
     "summary": "Usporiadaj pole celých čísel od najmenšieho po najväčšie.",
     "description": (
-        "Úloha z cvičení 7, 8 a 9. Jednoduché metódy (bublinkové triedenie, vkladanie, výber) "
-        "majú v priemere O(n²), metódy rozdeľuj a panuj O(n log n). Radix sort čísla "
+        "Jednoduché metódy (bubble sort, insertion sort, selection sort) "
+        "majú v priemere O(n²), metódy divide and conquer O(n log n). Radix sort čísla "
         "neporovnáva, triedi ich po cifrách a pri ohraničenom rozsahu hodnôt stojí O(n). "
         "Na zoradenom vstupe sa niektoré algoritmy zrýchlia a quicksort s posledným prvkom "
         "ako pivotom sa naopak spomalí na O(n²)."
@@ -22,7 +22,6 @@ SORTING = {
     "renderer": "array",
     "input_description": "Pole nezáporných celých čísel.",
     "output_description": "Zoradené pole s tými istými prvkami.",
-    "tags": ["usaa", "cv7", "cv8", "cv9"],
     "checker": CHECK_SORTED,
     "generators": [{
         "id": "gen_sort", "name": "Pole na triedenie", "code": GEN_ARRAY,
@@ -32,7 +31,7 @@ SORTING = {
     }],
     "algorithms": [
         {
-            "id": "alg_bubble", "name": "Bublinkové triedenie",
+            "id": "alg_bubble", "name": "Bubble sort",
             "description": "Opakovane porovnáva susedné prvky a vymení ich, ak sú v zlom poradí. Po každom prechode je najväčší prvok na konci.",
             "paradigm": "iterative", "best": "O(n^2)", "avg": "O(n^2)", "worst": "O(n^2)", "space": "O(1)",
             "param": "počet prvkov", "properties": ["stable", "in_place"],
@@ -52,7 +51,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_bubble_flag", "name": "Bublinkové triedenie s ukončením",
+            "id": "alg_bubble_flag", "name": "Bubble sort (early exit)",
             "description": "Ak počas prechodu nenastala žiadna výmena, pole je zoradené a triedenie skončí.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n^2)", "worst": "O(n^2)", "space": "O(1)",
             "note": "na zoradenom vstupe stačí jeden prechod", "param": "počet prvkov",
@@ -78,7 +77,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_insertion", "name": "Triedenie vkladaním",
+            "id": "alg_insertion", "name": "Insertion sort",
             "description": "Ľavá časť poľa je zoradená. Ďalší prvok sa posúva doľava, kým nenájde svoje miesto.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n^2)", "worst": "O(n^2)", "space": "O(1)",
             "param": "počet prvkov", "properties": ["stable", "in_place", "adaptive"],
@@ -101,7 +100,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_selection", "name": "Triedenie výberom",
+            "id": "alg_selection", "name": "Selection sort",
             "description": "V nezoradenej časti nájde najmenší prvok a vymení ho s prvým prvkom tejto časti.",
             "paradigm": "iterative", "best": "O(n^2)", "avg": "O(n^2)", "worst": "O(n^2)", "space": "O(1)",
             "note": "vždy n(n − 1)/2 porovnaní, najviac n − 1 výmen", "param": "počet prvkov",
@@ -128,7 +127,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_merge", "name": "Triedenie zlučovaním (merge sort)",
+            "id": "alg_merge", "name": "Merge sort",
             "description": "Rozdelí pole na polovice, rekurzívne ich zoradí a zlúči do jedného zoradeného poľa.",
             "paradigm": "divide_and_conquer", "best": "O(n log n)", "avg": "O(n log n)",
             "worst": "O(n log n)", "space": "O(n)", "param": "počet prvkov",
@@ -169,7 +168,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_heap", "name": "Triedenie haldou (heapsort)",
+            "id": "alg_heap", "name": "Heapsort",
             "description": "Z poľa vytvorí max-haldu. Potom opakovane presunie koreň na koniec a haldu opraví.",
             "paradigm": "data_structure", "best": "O(n log n)", "avg": "O(n log n)",
             "worst": "O(n log n)", "space": "O(1)", "param": "počet prvkov", "properties": ["in_place"],
@@ -204,7 +203,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_quick_last", "name": "Quicksort, pivot je posledný prvok",
+            "id": "alg_quick_last", "name": "Quicksort (last element pivot)",
             "description": "Lomutovo rozdelenie okolo posledného prvku úseku. Na zoradenom vstupe je každé rozdelenie najhoršie možné.",
             "paradigm": "divide_and_conquer", "best": "O(n log n)", "avg": "O(n log n)",
             "worst": "O(n^2)", "space": "O(n)", "note": "najhorší prípad nastane na zoradenom vstupe",
@@ -239,7 +238,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_quick_random", "name": "Quicksort, náhodný pivot",
+            "id": "alg_quick_random", "name": "Quicksort (random pivot)",
             "description": "Pivot sa vyberie náhodne, preto zoradený vstup nevedie na najhorší prípad.",
             "paradigm": "divide_and_conquer", "best": "O(n log n)", "avg": "O(n log n)",
             "worst": "O(n^2)", "space": "O(log n)", "note": "najhorší prípad je veľmi nepravdepodobný",
@@ -281,7 +280,7 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_radix_array", "name": "Radix sort (LSD, počítanie cifier)",
+            "id": "alg_radix_array", "name": "Radix sort (LSD, counting)",
             "description": "Triedi podľa cifier od najnižšej. Pre každú cifru stabilne rozdelí prvky počítaním výskytov.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "note": "O(d · (n + 10)), d je počet cifier. Generátor dáva hodnoty do 10n, preto d rastie ako log n a meranie ukáže n log n", "param": "počet prvkov",
@@ -314,8 +313,8 @@ def solve(data, tracker):
 ''',
         },
         {
-            "id": "alg_radix_queues", "name": "Radix sort (LSD, desať frontov)",
-            "description": "Verzia z cvičenia 9: prvky sa podľa cifry rozdelia do desiatich frontov a potom sa fronty spoja.",
+            "id": "alg_radix_queues", "name": "Radix sort (LSD, ten queues)",
+            "description": "Prvky sa podľa cifry rozdelia do desiatich frontov a potom sa fronty spoja.",
             "paradigm": "data_structure", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "note": "O(d · n), d je počet cifier. Generátor dáva hodnoty do 10n, preto d rastie ako log n a meranie ukáže n log n", "param": "počet prvkov",
             "properties": ["stable", "non_comparison"],
@@ -393,7 +392,7 @@ STRING_SORT = {
     "name": "Triedenie reťazcov",
     "summary": "Usporiadaj zoznam slov lexikograficky, ako v slovníku.",
     "description": (
-        "Úloha z cvičenia 9. LSD radix sort triedi podľa znakov od posledného, MSD radix sort "
+        "LSD radix sort triedi podľa znakov od posledného, MSD radix sort "
         "od prvého a rekurzívne v každej skupine. Oba porovnávajú len jednotlivé znaky. "
         "Merge sort porovnáva celé reťazce. Počet krokov radix sortov rastie s dĺžkou slov."
     ),
@@ -402,7 +401,6 @@ STRING_SORT = {
     "renderer": "none",
     "input_description": "Zoznam reťazcov z malých písmen.",
     "output_description": "Lexikograficky zoradený zoznam.",
-    "tags": ["usaa", "cv9"],
     "checker": CHECK_SORTED,
     "generators": [{
         "id": "gen_strings", "name": "Zoznam slov", "code": GEN_STRINGS,
@@ -461,7 +459,7 @@ def solve(words, tracker):
 ''',
         },
         {
-            "id": "alg_str_merge", "name": "Merge sort reťazcov", "viz": False,
+            "id": "alg_str_merge", "name": "Merge sort", "viz": False,
             "description": "Klasický merge sort, ktorý porovnáva celé reťazce.",
             "paradigm": "divide_and_conquer", "best": "O(n log n)", "avg": "O(n log n)",
             "worst": "O(n log n)", "space": "O(n)", "note": "každé porovnanie stojí až O(w)",

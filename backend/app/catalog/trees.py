@@ -1,11 +1,11 @@
-"""Prehľadávanie binárneho stromu z cvičenia 6 ÚSaA."""
+"""Prehľadávanie binárneho stromu."""
 
 from __future__ import annotations
 
 from .common import GEN_TREE, TREE_SHAPES, enum
 
 TREE_INPUT = (
-    "Strom v reprezentácii z cvičenia 6: values[i] je hodnota uzla i, left[i] a right[i] "
+    "Strom v troch poliach: values[i] je hodnota uzla i, left[i] a right[i] "
     "sú indexy potomkov, 0 znamená prázdny podstrom. Koreň je uzol root."
 )
 
@@ -24,7 +24,7 @@ PREORDER = {
     "name": "Preorder prehľadávanie",
     "summary": "Navštív koreň, potom ľavý a nakoniec pravý podstrom.",
     "description": (
-        "Úloha z cvičenia 6. Rekurzívna verzia nechá prácu na zásobník volaní, nerekurzívna "
+        "Rekurzívna verzia nechá prácu na zásobník volaní, nerekurzívna "
         "používa vlastný zásobník. Obe navštívia každý uzol raz, rozdiel je v pamäti a v tom, "
         "že rekurzia na hlbokom strome narazí na limit hĺbky."
     ),
@@ -33,12 +33,11 @@ PREORDER = {
     "renderer": "tree",
     "input_description": TREE_INPUT,
     "output_description": "Zoznam hodnôt uzlov v poradí preorder.",
-    "tags": ["usaa", "cv6"],
     "reference": "alg_pre_rec",
     "generators": [_gen("gen_tree_pre")],
     "algorithms": [
         {
-            "id": "alg_pre_rec", "name": "Preorder rekurzívne",
+            "id": "alg_pre_rec", "name": "Recursive preorder",
             "description": "visit(uzol): spracuj uzol, visit(ľavý), visit(pravý).",
             "paradigm": "recursive", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "note": "hĺbka rekurzie = výška stromu", "param": "počet uzlov", "properties": ["recursive"],
@@ -63,7 +62,7 @@ def solve(tree, tracker):
 ''',
         },
         {
-            "id": "alg_pre_stack", "name": "Preorder so zásobníkom",
+            "id": "alg_pre_stack", "name": "Iterative preorder (stack)",
             "description": "Zásobník nahrádza rekurziu: vyber uzol, spracuj ho a vlož najprv pravého, potom ľavého potomka.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "param": "počet uzlov",
@@ -103,7 +102,7 @@ INORDER = {
     "name": "Inorder prehľadávanie",
     "summary": "Navštív ľavý podstrom, potom koreň a nakoniec pravý podstrom.",
     "description": (
-        "Úloha z cvičenia 6. Pri binárnom vyhľadávacom strome dáva inorder zoradené kľúče. "
+        "Pri binárnom vyhľadávacom strome dáva inorder zoradené kľúče. "
         "Nerekurzívna verzia ide po ľavej vetve čo najhlbšie a uzly si ukladá na zásobník."
     ),
     "category": "traversal",
@@ -111,12 +110,11 @@ INORDER = {
     "renderer": "tree",
     "input_description": TREE_INPUT,
     "output_description": "Zoznam hodnôt uzlov v poradí inorder.",
-    "tags": ["usaa", "cv6"],
     "reference": "alg_in_rec",
     "generators": [_gen("gen_tree_in")],
     "algorithms": [
         {
-            "id": "alg_in_rec", "name": "Inorder rekurzívne",
+            "id": "alg_in_rec", "name": "Recursive inorder",
             "description": "visit(uzol): visit(ľavý), spracuj uzol, visit(pravý).",
             "paradigm": "recursive", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "param": "počet uzlov", "properties": ["recursive"],
@@ -141,7 +139,7 @@ def solve(tree, tracker):
 ''',
         },
         {
-            "id": "alg_in_stack", "name": "Inorder so zásobníkom",
+            "id": "alg_in_stack", "name": "Iterative inorder (stack)",
             "description": "Ide doľava a ukladá uzly na zásobník. Keď vľavo nič nie je, vyberie uzol, spracuje ho a pokračuje vpravo.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "param": "počet uzlov",
@@ -167,7 +165,7 @@ def solve(tree, tracker):
         },
     ],
     "experiments": [{
-        "id": "exp_inorder", "name": "Inorder rekurzívne a so zásobníkom",
+        "id": "exp_inorder", "name": "Recursive a iterative inorder",
         "algorithms": ["alg_in_rec", "alg_in_stack"], "generator": "gen_tree_in",
         "sizes": [500, 1000, 2000, 4000, 8000], "repeats": 3,
     }],
@@ -178,7 +176,7 @@ POSTORDER = {
     "name": "Postorder prehľadávanie",
     "summary": "Navštív ľavý a pravý podstrom a až nakoniec koreň.",
     "description": (
-        "Úloha z cvičenia 6. Nerekurzívna verzia s dvoma zásobníkmi najprv vytvorí poradie "
+        "Nerekurzívna verzia s dvoma zásobníkmi najprv vytvorí poradie "
         "koreň, pravý, ľavý a druhý zásobník ho otočí."
     ),
     "category": "traversal",
@@ -186,12 +184,11 @@ POSTORDER = {
     "renderer": "tree",
     "input_description": TREE_INPUT,
     "output_description": "Zoznam hodnôt uzlov v poradí postorder.",
-    "tags": ["usaa", "cv6"],
     "reference": "alg_post_rec",
     "generators": [_gen("gen_tree_post")],
     "algorithms": [
         {
-            "id": "alg_post_rec", "name": "Postorder rekurzívne",
+            "id": "alg_post_rec", "name": "Recursive postorder",
             "description": "visit(uzol): visit(ľavý), visit(pravý), spracuj uzol.",
             "paradigm": "recursive", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "param": "počet uzlov", "properties": ["recursive"],
@@ -216,7 +213,7 @@ def solve(tree, tracker):
 ''',
         },
         {
-            "id": "alg_post_two_stacks", "name": "Postorder s dvoma zásobníkmi",
+            "id": "alg_post_two_stacks", "name": "Iterative postorder (two stacks)",
             "description": "Prvý zásobník vytvorí poradie koreň, pravý, ľavý. Druhý ho otočí na ľavý, pravý, koreň.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "param": "počet uzlov",
@@ -245,7 +242,7 @@ def solve(tree, tracker):
         },
     ],
     "experiments": [{
-        "id": "exp_postorder", "name": "Postorder rekurzívne a s dvoma zásobníkmi",
+        "id": "exp_postorder", "name": "Recursive a iterative postorder",
         "algorithms": ["alg_post_rec", "alg_post_two_stacks"], "generator": "gen_tree_post",
         "sizes": [500, 1000, 2000, 4000, 8000], "repeats": 3,
     }],
@@ -256,7 +253,7 @@ LEVELORDER = {
     "name": "Level-order prehľadávanie",
     "summary": "Navštív uzly po úrovniach, zhora nadol a zľava doprava.",
     "description": (
-        "Úloha z cvičenia 6. S frontom stačí každý uzol navštíviť raz. Verzia bez frontu "
+        "S frontom stačí každý uzol navštíviť raz. Verzia bez frontu "
         "(levelorderNQ) prechádza strom od koreňa zvlášť pre každú úroveň, preto stojí najviac O(n · h). "
         "Na vyváženom strome je väčšina uzlov v posledných úrovniach, takže spolu vyjde len O(n). "
         "Na zdegenerovanom strome je to O(n²)."
@@ -266,12 +263,11 @@ LEVELORDER = {
     "renderer": "tree",
     "input_description": TREE_INPUT,
     "output_description": "Zoznam hodnôt uzlov po úrovniach.",
-    "tags": ["usaa", "cv6"],
     "reference": "alg_level_queue",
     "generators": [_gen("gen_tree_level")],
     "algorithms": [
         {
-            "id": "alg_level_queue", "name": "Level-order s frontom",
+            "id": "alg_level_queue", "name": "Level-order (queue)",
             "description": "Front drží uzly, ktoré čakajú na spracovanie. Po spracovaní uzla sa do frontu pridajú jeho potomkovia.",
             "paradigm": "iterative", "best": "O(n)", "avg": "O(n)", "worst": "O(n)", "space": "O(n)",
             "param": "počet uzlov",
@@ -298,7 +294,7 @@ def solve(tree, tracker):
 ''',
         },
         {
-            "id": "alg_level_nq", "name": "Level-order bez frontu (levelorderNQ)",
+            "id": "alg_level_nq", "name": "Level-order without queue",
             "description": "Zistí výšku stromu a pre každú úroveň znova prejde strom od koreňa až po túto úroveň.",
             "paradigm": "recursive", "best": "O(n)", "avg": "O(n log n)", "worst": "O(n^2)", "space": "O(n)",
             "note": "najviac O(n · h), h je výška stromu. Vyvážený strom O(n), reťaz O(n²)", "param": "počet uzlov", "properties": ["recursive"],

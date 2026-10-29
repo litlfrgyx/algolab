@@ -3,26 +3,15 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { BookOpen, Code2, FlaskConical, LibraryBig, Lock, LockOpen, Menu, PlayCircle, X } from 'lucide-react'
 import { useEditAuth } from '../lib/auth'
 import { Button, Input, cx } from './ui'
+import { Logo, LogoMark } from './Logo'
 
-const NAV = [
-  { to: '/', label: 'Úlohy', icon: LibraryBig, end: true },
+export const NAV: { to: string; label: string; icon: typeof LibraryBig; end?: boolean }[] = [
+  { to: '/problems', label: 'Úlohy', icon: LibraryBig },
   { to: '/algorithms', label: 'Algoritmy', icon: Code2 },
   { to: '/visualizer', label: 'Vizualizácia', icon: PlayCircle },
   { to: '/experiments', label: 'Experimenty', icon: FlaskConical },
   { to: '/guide', label: 'Príručka', icon: BookOpen },
 ]
-
-/** Značka: štyri stĺpce, ktoré sa práve zoradili. */
-export function Mark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <rect x="2" y="14" width="4" height="8" rx="1" fill="var(--accent)" opacity="0.45" />
-      <rect x="7.5" y="10" width="4" height="12" rx="1" fill="var(--accent)" opacity="0.65" />
-      <rect x="13" y="6" width="4" height="16" rx="1" fill="var(--accent)" opacity="0.85" />
-      <rect x="18.5" y="2" width="4" height="20" rx="1" fill="var(--accent)" />
-    </svg>
-  )
-}
 
 function EditLock() {
   const { protectedMode, canEdit, unlock, lock } = useEditAuth()
@@ -69,13 +58,13 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { info } = useEditAuth()
   return (
     <nav aria-label="Hlavná navigácia" className="flex h-full flex-col gap-6 px-3 py-4">
-      <div className="flex items-center gap-2.5 px-2">
-        <Mark className="size-7" />
-        <div className="leading-tight">
-          <p className="text-[15px] font-semibold">AlgoLab</p>
-          <p className="text-xs text-ink-3">Návrh a analýza algoritmov</p>
-        </div>
-      </div>
+      <NavLink to="/" onClick={onNavigate} className="flex items-center gap-2.5 rounded-[var(--radius)] px-2 py-1 hover:bg-surface-2" aria-label="AlgoLab, úvodná stránka">
+        <span className="size-9 shrink-0"><LogoMark className="size-full" /></span>
+        <span className="leading-tight">
+          <span className="block text-[16px] font-semibold tracking-[-0.01em] text-[var(--logo-ink)]">AlgoLab</span>
+          <span className="block text-xs text-ink-3">Návrh a analýza algoritmov</span>
+        </span>
+      </NavLink>
       <ul className="flex flex-col gap-0.5">
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <li key={to}>
@@ -108,10 +97,22 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
+export function SiteFooter({ year = 2026, className }: { year?: number; className?: string }) {
+  return (
+    <footer className={cx('mt-16 border-t border-line pt-5 pb-2 text-[13px] text-ink-3', className)}>
+      ©{year}{' '}
+      <a href="https://kpi.fei.tuke.sk" target="_blank" rel="noopener noreferrer" className="text-ink-2 underline decoration-line-strong hover:text-accent hover:decoration-accent">
+        KPI FEI TUKE
+      </a>
+    </footer>
+  )
+}
+
 export default function Layout() {
   const [open, setOpen] = useState(false)
   const location = useLocation()
-  const wide = location.pathname.startsWith('/visualizer')
+  const wide = location.pathname.startsWith('/visualizer') || location.pathname === '/algorithms'
+  const year = 2026
   return (
     <div className="min-h-dvh bg-ground">
       <aside className="fixed inset-y-0 left-0 hidden w-[232px] border-r border-line bg-ground lg:block">
@@ -121,8 +122,7 @@ export default function Layout() {
         <button aria-label="Otvoriť menu" onClick={() => setOpen(true)} className="grid size-9 place-items-center rounded-[var(--radius)] hover:bg-surface-2 cursor-pointer">
           <Menu className="size-5" aria-hidden />
         </button>
-        <Mark className="size-6" />
-        <span className="font-semibold">AlgoLab</span>
+        <Logo size={26} />
       </div>
       {open && (
         <div className="fixed inset-0 z-30 lg:hidden">
@@ -140,6 +140,7 @@ export default function Layout() {
           <Suspense fallback={<div className="h-64 animate-pulse rounded-[var(--radius-lg)] bg-surface-2" />}>
             <Outlet />
           </Suspense>
+          <SiteFooter year={year} />
         </div>
       </main>
     </div>

@@ -1,11 +1,11 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Search } from 'lucide-react'
 import { api } from '../api'
 import { useAsync } from '../lib/hooks'
 import { LADDER, PARADIGM, PROPERTY, TOPICS, TOPIC_ORDER, prettyO, topicOf } from '../lib/labels'
-import { AlgorithmTable } from '../components/AlgorithmTable'
-import { Button, Empty, Field, Input, LoadError, PageHeader, Panel, Select, Skeleton, cx } from '../components/ui'
+import { AlgorithmTile } from '../components/AlgorithmTile'
+import { Button, Empty, Field, Input, LoadError, PageHeader, Select, Skeleton, cx } from '../components/ui'
 import type { Paradigm } from '../types'
 
 function normalize(s: string) {
@@ -54,7 +54,7 @@ export default function Algorithms() {
       .filter((a) => {
         const p = problems[a.problem_id]
         if (nq && !normalize(`${a.name} ${a.description} ${p?.name ?? ''}`).includes(nq)) return false
-        if (topic && (!p || topicOf(p.tags, p.category) !== topic)) return false
+        if (topic && (!p || topicOf(p.category) !== topic)) return false
         if (paradigm && a.paradigm !== paradigm) return false
         if (maxAvg) {
           const r = rank(a.complexity_time_avg)
@@ -68,6 +68,21 @@ export default function Algorithms() {
       })
       .sort((x, y) => (order[x.problem_id] ?? 99) - (order[y.problem_id] ?? 99) || x.sort_order - y.sort_order)
   }, [state.data, q, topic, paradigm, maxAvg, props, vizOnly, origin])
+
+  const groups = useMemo(() => {
+    if (!state.data) return []
+    const problems = Object.fromEntries(state.data.problems.map((p) => [p.id, p]))
+    const by = new Map<string, typeof filtered>()
+    for (const a of filtered) {
+      const p = problems[a.problem_id]
+      const t = p ? topicOf(p.category) : 'vlastne'
+      by.set(t, [...(by.get(t) ?? []), a])
+    }
+    return TOPIC_ORDER.filter((t) => by.has(t)).map((t) => ({ id: t, title: TOPICS.find((x) => x.id === t)!.title, items: by.get(t)! }))
+  }, [filtered, state.data])
+
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const LIMIT = 8
 
   const active = q || topic || paradigm || maxAvg || props.length || vizOnly || origin
   const usedProps = useMemo(() => {
@@ -143,17 +158,47 @@ export default function Algorithms() {
         ) : null}
       </div>
 
-      <Panel
-        title={state.data ? <h2 className="text-[15px] font-semibold num">{filtered.length} z {state.data.algorithms.length} algoritmov</h2> : 'Algoritmy'}
-      >
-        {!state.data && !state.error && <div className="space-y-2 p-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-9" />)}</div>}
-        {state.data && filtered.length === 0 && (
+      {state.data && (
+        <p className="mb-4 text-[13px] text-ink-3 num" aria-live="polite">
+          {filtered.length === state.data.algorithms.length
+            ? `${filtered.length} algoritmov`
+            : `${filtered.length} z ${state.data.algorithms.length} algoritmov`}
+        </p>
+      )}
+      {!state.data && !state.error && (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 9 }, (_, i) => <Skeleton key={i} className="h-40" />)}</div>
+      )}
+      {state.data && filtered.length === 0 && (
+        <div className="rounded-[var(--radius-lg)] border border-line bg-surface">
           <Empty title="Filtrom nezodpovedá žiadny algoritmus" action={<Button size="sm" onClick={() => setParams(new URLSearchParams())}>Zrušiť filtre</Button>}>
             Skús voľnejšiu hranicu zložitosti alebo menej vlastností.
           </Empty>
-        )}
-        {filtered.length > 0 && <AlgorithmTable algorithms={filtered} problemNames={problemNames} />}
-      </Panel>
+        </div>
+      )}
+      <div className="space-y-8">
+        {groups.map((g) => (
+          <section key={g.id} aria-labelledby={`g-${g.id}`}>
+            <h2 id={`g-${g.id}`} className="mb-3 flex items-baseline gap-2 text-[15px] font-semibold">
+              {g.title}
+              <span className="text-[13px] font-normal text-ink-3 num">{g.items.length}</span>
+            </h2>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {(expanded[g.id] || topic || groups.length === 1 ? g.items : g.items.slice(0, LIMIT)).map((a) => (
+                <li key={a.id}><AlgorithmTile a={a} problemName={problemNames[a.problem_id]} /></li>
+              ))}
+            </ul>
+            {g.items.length > LIMIT && !topic && groups.length > 1 && (
+              <button
+                onClick={() => setExpanded((e) => ({ ...e, [g.id]: !e[g.id] }))}
+                aria-expanded={!!expanded[g.id]}
+                className="mt-3 text-[13px] font-medium text-accent hover:underline cursor-pointer"
+              >
+                {expanded[g.id] ? 'Zobraziť menej' : `Zobraziť všetkých ${g.items.length}`}
+              </button>
+            )}
+          </section>
+        ))}
+      </div>
     </>
   )
 }

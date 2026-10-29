@@ -109,7 +109,7 @@ GEN_TREE = '''
 import random
 
 def generate(n, shape="random", seed=42):
-    """Binárny strom s n uzlami v reprezentácii z cvičenia 6 ÚSaA.
+    """Binárny strom s n uzlami uložený v troch poliach.
 
     values[i] je hodnota uzla i, left[i] a right[i] sú indexy potomkov,
     0 znamená prázdny podstrom. Index 0 sa nepoužíva, koreň je uzol 1.
